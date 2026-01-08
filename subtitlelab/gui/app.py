@@ -90,9 +90,7 @@ class SubtitleLabApp:
                 controls=[
                     ft.Row(
                         controls=[
-                            ft.Icon(
-                                name="movie_creation_outlined", color=self.theme.primary, size=32
-                            ),
+                            ft.Icon("movie_creation_outlined", color=self.theme.primary, size=32),
                             ft.Text(
                                 "SubtitleLab",
                                 size=24,
@@ -168,7 +166,7 @@ class SubtitleLabApp:
                         ft.Container(
                             content=ft.Row(
                                 [
-                                    ft.Icon(name="upload_file", size=16, color=self.theme.primary),
+                                    ft.Icon("upload_file", size=16, color=self.theme.primary),
                                     ft.Text(
                                         "Import File",
                                         color=self.theme.primary,
