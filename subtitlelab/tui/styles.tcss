@@ -95,7 +95,6 @@ ListItem.-highlight {
     background: $surface;
     color: $text;
     padding: 1 2;
-    border-radius: 1;
     margin-bottom: 1;
     text-style: bold;
 }
@@ -185,8 +184,7 @@ Log {
 
 ProgressBar {
     background: $surface;
-    bar-color: $green;
-    color: $text;
+    color: $green;
 }
 
 /* Settings */
