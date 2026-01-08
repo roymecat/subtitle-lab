@@ -11,46 +11,6 @@ from textual.binding import Binding
 class FilePickerScreen(ModalScreen[Path]):
     """Modal screen for selecting a file."""
 
-    CSS = """
-    FilePickerScreen {
-        align: center middle;
-        background: rgba(0,0,0,0.7);
-    }
-
-    #picker-container {
-        width: 70%;
-        height: 80%;
-        background: $mantle;
-        border: solid $lavender;
-        padding: 1;
-        layout: vertical;
-    }
-
-    #file-tree {
-        height: 1fr;
-        border: solid $surface;
-        background: $base;
-        margin: 1 0;
-    }
-
-    #path-display {
-        background: $surface;
-        border: none;
-        margin-bottom: 1;
-        color: $text;
-    }
-
-    .dialog-footer {
-        height: 3;
-        align: right middle;
-    }
-
-    .dialog-footer Button {
-        width: 15;
-        margin-left: 1;
-    }
-    """
-
     BINDINGS = [
         Binding("escape", "cancel", "Cancel"),
         Binding("enter", "select_current", "Select"),
@@ -63,13 +23,16 @@ class FilePickerScreen(ModalScreen[Path]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="picker-container"):
-            yield Label("Select Subtitle File", classes="title")
+            yield Label("Select Subtitle File", classes="picker-title")
             yield Input(str(self.initial_path), id="path-display", disabled=True)
             yield DirectoryTree(str(self.initial_path), id="file-tree")
 
             with Horizontal(classes="dialog-footer"):
                 yield Button("Cancel", variant="default", id="btn-cancel")
                 yield Button("Select", variant="primary", id="btn-select", disabled=True)
+
+    def on_mount(self) -> None:
+        self.query_one(DirectoryTree).focus()
 
     def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
         self.selected_path = Path(event.path)

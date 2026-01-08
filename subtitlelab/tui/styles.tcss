@@ -122,17 +122,57 @@ DataTable > .datatable--highlight {
 }
 
 /* File Picker */
-DirectoryTree {
-    background: $mantle;
-    border: solid $lavender;
-    padding: 1;
-    width: 60%;
-    height: 60%;
-}
-
 FilePickerScreen {
     align: center middle;
     background: rgba(0,0,0,0.7);
+}
+
+#picker-container {
+    width: 70%;
+    height: 80%;
+    background: $mantle;
+    border: solid $lavender;
+    padding: 1 2;
+    layout: vertical;
+}
+
+.picker-title {
+    color: $lavender;
+    text-style: bold;
+    margin-bottom: 1;
+    text-align: center;
+}
+
+#file-tree {
+    height: 1fr;
+    border: solid $surface;
+    background: $base;
+    margin: 1 0;
+    padding: 0 1;
+    scrollbar-color: $overlay;
+}
+
+#file-tree:focus {
+    border: solid $lavender;
+}
+
+#path-display {
+    background: $surface;
+    border: none;
+    margin-bottom: 1;
+    color: $text;
+    text-style: italic;
+}
+
+.dialog-footer {
+    height: 3;
+    align: right middle;
+    margin-top: 1;
+}
+
+.dialog-footer Button {
+    width: 15;
+    margin-left: 1;
 }
 
 /* Action Bar (Bottom of Sidebar) */
