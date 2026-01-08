@@ -1,14 +1,27 @@
 # SubtitleLab Dependencies
+
 # PyQt6 GUI Framework
 PyQt6>=6.5.0
 
 # HTTP Client
 httpx>=0.24.0
 
-# Subtitle Parsing
-pysubs2>=1.6.0
+# OpenAI API Client
+openai>=1.0.0
 
-# Token Counting (optional, for cost estimation)
+# Subtitle Parsing
+pysubs2>=1.7.0
+
+# Retry Logic
+tenacity>=8.2.0
+
+# Data Validation
+pydantic>=2.0.0
+
+# Async File Operations
+aiofiles>=23.0.0
+
+# Token Counting (for cost estimation)
 tiktoken>=0.5.0
 
 # Build Tools (optional, for creating executables)
