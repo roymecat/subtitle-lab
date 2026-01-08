@@ -176,7 +176,38 @@ def show_config(config: AppConfig):
     console.print(f"Config file: {CONFIG_FILE}")
 
 
+def print_banner():
+    """Print application banner."""
+    console.print(
+        Panel.fit(
+            "[bold cyan]SubtitleLab CLI[/bold cyan]\n[dim]Intelligent Subtitle Processor[/dim]",
+            style="blue",
+        )
+    )
+
+
+def print_help():
+    """Print usage help."""
+    table = Table(show_header=False, box=None)
+    table.add_column("Command", style="cyan bold")
+    table.add_column("Description")
+
+    table.add_row("init", "Initialize configuration wizard")
+    table.add_row("process <file>", "Process a subtitle file")
+    table.add_row("config", "Show current configuration")
+
+    console.print("\n[bold]Usage:[/bold]")
+    console.print("  subtitlelab.exe [command] [options]")
+    console.print("\n[bold]Commands:[/bold]")
+    console.print(table)
+    console.print("\n[bold]Examples:[/bold]")
+    console.print("  subtitlelab.exe init")
+    console.print("  subtitlelab.exe process video.srt")
+
+
 def main():
+    print_banner()
+
     parser = argparse.ArgumentParser(description="SubtitleLab CLI - Intelligent Subtitle Processor")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
@@ -190,6 +221,10 @@ def main():
     proc_parser = subparsers.add_parser("process", help="Process a subtitle file")
     proc_parser.add_argument("file", help="Path to subtitle file (.srt, .ass)")
     proc_parser.add_argument("-o", "--output", help="Output path (optional)")
+
+    if len(sys.argv) == 1:
+        print_help()
+        return
 
     args = parser.parse_args()
 
@@ -212,7 +247,7 @@ def main():
 
         asyncio.run(process_file(file_path, config, output_path))
     else:
-        parser.print_help()
+        print_help()
 
 
 if __name__ == "__main__":

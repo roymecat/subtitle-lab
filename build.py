@@ -32,7 +32,7 @@ def build_executable():
     """Build the Windows executable using PyInstaller."""
 
     app_name = "SubtitleLab"
-    main_script = "subtitlelab/cli.py"  # Entry point changed to cli.py
+    main_script = "subtitlelab/main.py"  # Use main.py to preserve package structure
 
     if not os.path.exists(main_script):
         print(f"Error: {main_script} not found!")
