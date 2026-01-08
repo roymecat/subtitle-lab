@@ -35,22 +35,22 @@ class SettingsDialog(ft.AlertDialog):
             tabs=[
                 ft.Tab(
                     text="LLM Configuration",
-                    icon=ft.icons.SMART_TOY_OUTLINED,
+                    icon="smart_toy_outlined",
                     content=self._build_llm_tab(),
                 ),
                 ft.Tab(
                     text="Processing",
-                    icon=ft.icons.MEMORY_OUTLINED,
+                    icon="memory_outlined",
                     content=self._build_processing_tab(),
                 ),
                 ft.Tab(
                     text="Prompts",
-                    icon=ft.icons.EDIT_NOTE_OUTLINED,
+                    icon="edit_note_outlined",
                     content=self._build_prompt_tab(),
                 ),
                 ft.Tab(
                     text="Pricing",
-                    icon=ft.icons.ATTACH_MONEY_OUTLINED,
+                    icon="attach_money_outlined",
                     content=self._build_pricing_tab(),
                 ),
             ],
@@ -150,9 +150,9 @@ class SettingsDialog(ft.AlertDialog):
         # Test Connection Button
         test_btn = ft.ElevatedButton(
             "Test Connection",
-            icon=ft.icons.NETWORK_CHECK,
+            icon="network_check",
             style=ft.ButtonStyle(
-                color=ft.colors.WHITE,
+                color=ft.Colors.WHITE,
                 bgcolor=self.theme.success,
                 shape=ft.RoundedRectangleBorder(radius=self.theme.radius.SM),
             ),
@@ -169,9 +169,9 @@ class SettingsDialog(ft.AlertDialog):
                     self.llm_refs["model"],
                     ft.Row(
                         [
-                            ft.Expanded(self.llm_refs["context_window"]),
-                            ft.Expanded(self.llm_refs["max_tokens"]),
-                            ft.Expanded(self.llm_refs["timeout"]),
+                            ft.Container(content=self.llm_refs["context_window"], expand=True),
+                            ft.Container(content=self.llm_refs["max_tokens"], expand=True),
+                            ft.Container(content=self.llm_refs["timeout"], expand=True),
                         ],
                         spacing=20,
                     ),
@@ -335,7 +335,7 @@ class SettingsDialog(ft.AlertDialog):
 
         add_char_btn = ft.OutlinedButton(
             "Add Character Pair",
-            icon=ft.icons.ADD,
+            icon="add",
             style=ft.ButtonStyle(color=self.theme.primary),
             on_click=lambda e: self._add_char_row(),
         )
@@ -387,7 +387,7 @@ class SettingsDialog(ft.AlertDialog):
             **self._input_style(),
         )
         del_btn = ft.IconButton(
-            icon=ft.icons.DELETE_OUTLINE, icon_color=self.theme.error, on_click=delete_row
+            icon="delete_outline", icon_color=self.theme.error, on_click=delete_row
         )
 
         row = ft.Row([w_input, c_input, del_btn], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
@@ -427,7 +427,7 @@ class SettingsDialog(ft.AlertDialog):
                     ft.Container(
                         content=ft.Row(
                             [
-                                ft.Icon(ft.icons.INFO_OUTLINE, color=self.theme.secondary),
+                                ft.Icon("info_outline", color=self.theme.secondary),
                                 ft.Text(
                                     "Used for calculating estimated costs based on token usage.",
                                     color=self.theme.text_secondary,
@@ -459,7 +459,7 @@ class SettingsDialog(ft.AlertDialog):
             ft.ElevatedButton(
                 "Save Changes",
                 style=ft.ButtonStyle(
-                    color=ft.colors.WHITE,
+                    color=ft.Colors.WHITE,
                     bgcolor=self.theme.primary,
                     shape=ft.RoundedRectangleBorder(radius=self.theme.radius.SM),
                 ),

@@ -20,7 +20,6 @@ from ..core.processor import SubtitleProcessor, ProcessorCallbacks
 from ..core.config import AppConfig
 from ..core.models import BatchResult, ProcessingStats
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -31,12 +30,10 @@ class SubtitleLabApp:
         self.theme_mode = ThemeMode.DARK if self.config.ui.theme_mode == "dark" else ThemeMode.LIGHT
         self.theme: Theme = get_theme(self.theme_mode)
 
-        # State
         self.current_file: Optional[Path] = None
         self.is_processing: bool = False
         self.processor: Optional[SubtitleProcessor] = None
 
-        # UI References
         self.page: Optional[ft.Page] = None
         self.original_list: Optional[ft.ListView] = None
         self.processed_list: Optional[ft.ListView] = None
@@ -44,11 +41,10 @@ class SubtitleLabApp:
         self.progress_ring: Optional[AnimatedProgressRing] = None
         self.status_text: Optional[ft.Text] = None
         self.start_btn: Optional[ft.ElevatedButton] = None
-        self.cancel_btn: Optional[ft.ElevatedButton] = None  # P0-5: Add cancel button
+        self.cancel_btn: Optional[ft.ElevatedButton] = None
         self.export_btn: Optional[ft.ElevatedButton] = None
         self.file_picker: Optional[ft.FilePicker] = None
 
-        # Stats UI
         self.stat_total: Optional[StatsCard] = None
         self.stat_processed: Optional[StatsCard] = None
         self.stat_time: Optional[StatsCard] = None
@@ -68,7 +64,6 @@ class SubtitleLabApp:
         self.file_picker = ft.FilePicker()
         self.page.overlay.append(self.file_picker)
 
-        # Build UI Layout
         header = self._build_header()
         content = self._build_main_content()
         bottom_panel = self._build_bottom_panel()
@@ -87,7 +82,6 @@ class SubtitleLabApp:
             )
         )
 
-        # Init log
         self._log("INFO", "SubtitleLab initialized. Ready to import.")
 
     def _build_header(self) -> ft.Control:
@@ -97,7 +91,7 @@ class SubtitleLabApp:
                     ft.Row(
                         controls=[
                             ft.Icon(
-                                ft.icons.MOVIE_CREATION_OUTLINED, color=self.theme.primary, size=32
+                                name="movie_creation_outlined", color=self.theme.primary, size=32
                             ),
                             ft.Text(
                                 "SubtitleLab",
@@ -122,15 +116,15 @@ class SubtitleLabApp:
                     ft.Row(
                         controls=[
                             ft.IconButton(
-                                icon=ft.icons.DARK_MODE
+                                icon="dark_mode"
                                 if self.theme_mode == ThemeMode.LIGHT
-                                else ft.icons.LIGHT_MODE,
+                                else "light_mode",
                                 icon_color=self.theme.text_secondary,
                                 tooltip="Toggle Theme",
                                 on_click=self._toggle_theme,
                             ),
                             ft.IconButton(
-                                icon=ft.icons.SETTINGS_OUTLINED,
+                                icon="settings_outlined",
                                 icon_color=self.theme.text_secondary,
                                 tooltip="Settings",
                                 on_click=self._on_settings_click,
@@ -140,7 +134,7 @@ class SubtitleLabApp:
                                     "John Doe",
                                     color=self.theme.text_primary,
                                     weight=ft.FontWeight.BOLD,
-                                ),  # Placeholder user
+                                ),
                                 padding=ft.padding.symmetric(horizontal=12, vertical=8),
                                 border_radius=self.theme.radius.MD,
                                 bgcolor=self.theme.surface_light,
@@ -155,7 +149,6 @@ class SubtitleLabApp:
         )
 
     def _build_main_content(self) -> ft.Control:
-        # Left Panel: Original Subtitles
         self.original_list = ft.ListView(
             expand=True,
             spacing=10,
@@ -175,9 +168,7 @@ class SubtitleLabApp:
                         ft.Container(
                             content=ft.Row(
                                 [
-                                    ft.Icon(
-                                        ft.icons.UPLOAD_FILE, size=16, color=self.theme.primary
-                                    ),
+                                    ft.Icon(name="upload_file", size=16, color=self.theme.primary),
                                     ft.Text(
                                         "Import File",
                                         color=self.theme.primary,
@@ -190,8 +181,7 @@ class SubtitleLabApp:
                             on_click=self._on_import_click,
                             padding=ft.padding.symmetric(horizontal=12, vertical=8),
                             border_radius=self.theme.radius.SM,
-                            bgcolor=ft.colors.with_opacity(0.1, self.theme.primary),
-                            cursor=ft.SystemMouseCursor.CLICK,
+                            bgcolor=ft.Colors.with_opacity(0.1, self.theme.primary),
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -206,7 +196,6 @@ class SubtitleLabApp:
             expand=True,
         )
 
-        # Right Panel: Processed Results
         self.processed_list = ft.ListView(
             expand=True,
             spacing=10,
@@ -228,20 +217,20 @@ class SubtitleLabApp:
                             controls=[
                                 self._build_action_button(
                                     "Start Processing",
-                                    ft.icons.PLAY_ARROW,
+                                    "play_arrow",
                                     self._on_start_click,
                                     "primary",
                                 ),
                                 self._build_action_button(
                                     "Cancel",
-                                    ft.icons.STOP,
+                                    "stop",
                                     self._on_cancel_click,
                                     "error",
                                     disabled=True,
                                 ),
                                 self._build_action_button(
                                     "Export",
-                                    ft.icons.DOWNLOAD,
+                                    "download",
                                     self._on_export_click,
                                     "success",
                                     disabled=True,
@@ -278,8 +267,8 @@ class SubtitleLabApp:
             style=ft.ButtonStyle(
                 color=style["color"],
                 bgcolor={
-                    ft.MaterialState.DEFAULT: style["bgcolor"],
-                    ft.MaterialState.DISABLED: self.theme.surface_light,
+                    ft.ControlState.DEFAULT: style["bgcolor"],
+                    ft.ControlState.DISABLED: self.theme.surface_light,
                 },
                 shape=ft.RoundedRectangleBorder(radius=style["border_radius"]),
                 padding=style["padding"],
@@ -296,17 +285,12 @@ class SubtitleLabApp:
         return btn
 
     def _build_bottom_panel(self) -> ft.Control:
-        # Progress Ring
         self.progress_ring = AnimatedProgressRing(theme=self.theme, size=60, stroke_width=6)
 
-        # Stats Cards
-        self.stat_total = StatsCard(self.theme, ft.icons.LIST, "Total Lines", "0")
-        self.stat_processed = StatsCard(
-            self.theme, ft.icons.CHECK_CIRCLE, "Processed", "0", "0%", True
-        )
-        self.stat_time = StatsCard(self.theme, ft.icons.TIMER, "Time Elapsed", "00:00")
+        self.stat_total = StatsCard(self.theme, "list", "Total Lines", "0")
+        self.stat_processed = StatsCard(self.theme, "check_circle", "Processed", "0", "0%", True)
+        self.stat_time = StatsCard(self.theme, "timer", "Time Elapsed", "00:00")
 
-        # Log View
         self.log_list = ft.ListView(
             expand=True,
             spacing=4,
@@ -359,11 +343,6 @@ class SubtitleLabApp:
             ft.ThemeMode.LIGHT if self.theme_mode == ThemeMode.LIGHT else ft.ThemeMode.DARK
         )
         self.page.bgcolor = self.theme.background
-        # Note: A full rebuild/update of all components would be needed for a perfect switch without reload.
-        # For this version, we'll just toggle the page mode, but individual component styles (that read self.theme)
-        # won't update dynamically without re-instantiation.
-        # For a production app, we'd use state binding or rebuild the UI.
-        # For now, let's just update the page background and show a message.
         self.page.update()
         self._log(
             "INFO",
@@ -409,7 +388,7 @@ class SubtitleLabApp:
         self.start_btn.update()
 
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             entries = await loop.run_in_executor(None, self.processor.load_subtitles, path)
 
             self.original_list.controls.clear()
@@ -469,13 +448,12 @@ class SubtitleLabApp:
 
         self.is_processing = True
         self.start_btn.disabled = True
-        self.cancel_btn.disabled = False  # P0-5: Enable cancel button
+        self.cancel_btn.disabled = False
         self.export_btn.disabled = True
         self.start_btn.update()
         self.cancel_btn.update()
         self.export_btn.update()
 
-        # Setup callbacks
         self.processor.callbacks = ProcessorCallbacks(
             on_progress=self._on_progress_update,
             on_batch_complete=self._on_batch_complete,
@@ -493,28 +471,22 @@ class SubtitleLabApp:
         finally:
             self.is_processing = False
             self.start_btn.disabled = False
-            self.cancel_btn.disabled = True  # P0-5: Disable cancel button
+            self.cancel_btn.disabled = True
             self.start_btn.update()
             self.cancel_btn.update()
-            # P0-4: Clean up resources
             await self._cleanup_processor()
 
     async def _on_cancel_click(self, e):
-        """P0-5: Handle cancel button click."""
         if not self.processor or not self.is_processing:
             return
 
         self._log("WARNING", "Cancelling processing...")
         self.processor.cancel()
 
-        # Update UI state
         self.cancel_btn.disabled = True
         self.cancel_btn.update()
 
-        # Note: The finally block in _on_start_click will handle the rest
-
     async def _cleanup_processor(self):
-        """P0-4: Clean up processor resources."""
         if self.processor:
             try:
                 await self.processor.close()

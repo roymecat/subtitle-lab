@@ -22,12 +22,12 @@ class GlassCard(ft.Container):
             margin=margin,
             border_radius=theme.radius.LG,
             border=ft.border.all(1, theme.border),
-            bgcolor=ft.colors.with_opacity(0.7, theme.surface),
+            bgcolor=ft.Colors.with_opacity(0.7, theme.surface),
             blur=ft.Blur(10, 10, ft.BlurTileMode.CLAMP),
             shadow=ft.BoxShadow(
                 spread_radius=1,
                 blur_radius=10,
-                color=ft.colors.with_opacity(0.1, "#000000"),
+                color=ft.Colors.with_opacity(0.1, "#000000"),
                 offset=ft.Offset(0, 4),
             ),
             animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT),
@@ -127,7 +127,7 @@ class SubtitleListItem(ft.Container):
                             size=12,
                             font_family="monospace",
                         ),
-                        bgcolor=ft.colors.with_opacity(0.1, theme.accent),
+                        bgcolor=ft.Colors.with_opacity(0.1, theme.accent),
                         padding=ft.padding.symmetric(horizontal=8, vertical=4),
                         border_radius=theme.radius.SM,
                     ),
@@ -177,10 +177,10 @@ class ProcessedResultCard(ft.Container):
         self.theme = theme
 
         action_configs = {
-            "merge": {"color": theme.secondary, "icon": ft.icons.MERGE_TYPE},
-            "delete": {"color": theme.error, "icon": ft.icons.DELETE_OUTLINE},
-            "correct": {"color": theme.success, "icon": ft.icons.AUTO_FIX_HIGH},
-            "keep": {"color": theme.text_secondary, "icon": ft.icons.CHECK_CIRCLE_OUTLINE},
+            "merge": {"color": theme.secondary, "icon": "merge_type"},
+            "delete": {"color": theme.error, "icon": "delete_outline"},
+            "correct": {"color": theme.success, "icon": "auto_fix_high"},
+            "keep": {"color": theme.text_secondary, "icon": "check_circle_outline"},
         }
 
         config = action_configs.get(action.lower(), action_configs["keep"])
@@ -205,7 +205,7 @@ class ProcessedResultCard(ft.Container):
                                 ),
                                 padding=ft.padding.symmetric(horizontal=8, vertical=4),
                                 border_radius=theme.radius.SM,
-                                bgcolor=ft.colors.with_opacity(0.1, config["color"]),
+                                bgcolor=ft.Colors.with_opacity(0.1, config["color"]),
                             ),
                             ft.Text(
                                 f"{start_time} - {end_time}",
@@ -230,7 +230,7 @@ class ProcessedResultCard(ft.Container):
                                 ],
                                 expand=True,
                             ),
-                            ft.Icon(ft.icons.ARROW_FORWARD, color=theme.border, size=20),
+                            ft.Icon("arrow_forward", color=theme.border, size=20),
                             ft.Column(
                                 controls=[
                                     ft.Text(
@@ -312,14 +312,14 @@ class StatsCard(GlassCard):
         trend_up: bool = True,
     ):
         trend_color = theme.success if trend_up else theme.error
-        trend_icon = ft.icons.TRENDING_UP if trend_up else ft.icons.TRENDING_DOWN
+        trend_icon = "trending_up" if trend_up else "trending_down"
 
         content = ft.Row(
             controls=[
                 ft.Container(
                     content=ft.Icon(icon, color=theme.primary, size=24),
                     padding=10,
-                    bgcolor=ft.colors.with_opacity(0.1, theme.primary),
+                    bgcolor=ft.Colors.with_opacity(0.1, theme.primary),
                     border_radius=theme.radius.MD,
                 ),
                 ft.Column(
@@ -349,7 +349,7 @@ class StatsCard(GlassCard):
                     ),
                     padding=ft.padding.symmetric(horizontal=8, vertical=4),
                     border_radius=theme.radius.SM,
-                    bgcolor=ft.colors.with_opacity(0.1, trend_color),
+                    bgcolor=ft.Colors.with_opacity(0.1, trend_color),
                 )
             )
 
