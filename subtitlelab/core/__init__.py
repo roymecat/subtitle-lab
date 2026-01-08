@@ -31,7 +31,7 @@ from .llm_client import (
 from .chunker import SmartChunker, ChunkerConfig, SlidingWindowManager, Batch
 from .semantic_analyzer import SemanticAnalyzer
 from .processor import SubtitleProcessor, ProcessorCallbacks, ProcessorState, SYSTEM_PROMPT
-from .speaker_detector import SpeakerDetector, SpeakerInfo, SpeakerChangePoint
+from .speaker_detector import SpeakerDetector, SpeakerInfo, SpeakerSegment
 from .quality_validator import QualityValidator, ValidationResult, ValidationIssue
 from .quality_scorer import QualityScorer, ScoringResult
 
@@ -79,7 +79,7 @@ __all__ = [
     # Speaker Detector
     "SpeakerDetector",
     "SpeakerInfo",
-    "SpeakerChangePoint",
+    "SpeakerSegment",
     # Quality Validator
     "QualityValidator",
     "ValidationResult",
