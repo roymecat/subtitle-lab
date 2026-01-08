@@ -90,7 +90,9 @@ class SubtitleLabApp:
                 controls=[
                     ft.Row(
                         controls=[
-                            ft.Icon("movie_creation_outlined", color=self.theme.primary, size=32),
+                            ft.Icon(
+                                ft.Icons.MOVIE_CREATION_OUTLINED, color=self.theme.primary, size=32
+                            ),
                             ft.Text(
                                 "SubtitleLab",
                                 size=24,
@@ -114,15 +116,15 @@ class SubtitleLabApp:
                     ft.Row(
                         controls=[
                             ft.IconButton(
-                                icon="dark_mode"
+                                icon=ft.Icons.DARK_MODE
                                 if self.theme_mode == ThemeMode.LIGHT
-                                else "light_mode",
+                                else ft.Icons.LIGHT_MODE,
                                 icon_color=self.theme.text_secondary,
                                 tooltip="Toggle Theme",
                                 on_click=self._toggle_theme,
                             ),
                             ft.IconButton(
-                                icon="settings_outlined",
+                                icon=ft.Icons.SETTINGS_OUTLINED,
                                 icon_color=self.theme.text_secondary,
                                 tooltip="Settings",
                                 on_click=self._on_settings_click,
@@ -166,7 +168,9 @@ class SubtitleLabApp:
                         ft.Container(
                             content=ft.Row(
                                 [
-                                    ft.Icon("upload_file", size=16, color=self.theme.primary),
+                                    ft.Icon(
+                                        ft.Icons.UPLOAD_FILE, size=16, color=self.theme.primary
+                                    ),
                                     ft.Text(
                                         "Import File",
                                         color=self.theme.primary,
@@ -215,20 +219,20 @@ class SubtitleLabApp:
                             controls=[
                                 self._build_action_button(
                                     "Start Processing",
-                                    "play_arrow",
+                                    ft.Icons.PLAY_ARROW,
                                     self._on_start_click,
                                     "primary",
                                 ),
                                 self._build_action_button(
                                     "Cancel",
-                                    "stop",
+                                    ft.Icons.STOP,
                                     self._on_cancel_click,
                                     "error",
                                     disabled=True,
                                 ),
                                 self._build_action_button(
                                     "Export",
-                                    "download",
+                                    ft.Icons.DOWNLOAD,
                                     self._on_export_click,
                                     "success",
                                     disabled=True,
@@ -256,12 +260,17 @@ class SubtitleLabApp:
         )
 
     def _build_action_button(
-        self, text: str, icon: str, on_click, variant: str, disabled: bool = False
+        self, label: str, icon, on_click, variant: str, disabled: bool = False
     ):
         style = self.theme.get_button_style(variant)
         btn = ft.ElevatedButton(
-            text=text,
-            icon=icon,
+            content=ft.Row(
+                [
+                    ft.Icon(icon, size=18),
+                    ft.Text(label),
+                ],
+                spacing=8,
+            ),
             style=ft.ButtonStyle(
                 color=style["color"],
                 bgcolor={
@@ -274,20 +283,22 @@ class SubtitleLabApp:
             on_click=on_click,
             disabled=disabled,
         )
-        if text == "Start Processing":
+        if label == "Start Processing":
             self.start_btn = btn
-        elif text == "Cancel":
+        elif label == "Cancel":
             self.cancel_btn = btn
-        elif text == "Export":
+        elif label == "Export":
             self.export_btn = btn
         return btn
 
     def _build_bottom_panel(self) -> ft.Control:
         self.progress_ring = AnimatedProgressRing(theme=self.theme, size=60, stroke_width=6)
 
-        self.stat_total = StatsCard(self.theme, "list", "Total Lines", "0")
-        self.stat_processed = StatsCard(self.theme, "check_circle", "Processed", "0", "0%", True)
-        self.stat_time = StatsCard(self.theme, "timer", "Time Elapsed", "00:00")
+        self.stat_total = StatsCard(self.theme, ft.Icons.LIST, "Total Lines", "0")
+        self.stat_processed = StatsCard(
+            self.theme, ft.Icons.CHECK_CIRCLE, "Processed", "0", "0%", True
+        )
+        self.stat_time = StatsCard(self.theme, ft.Icons.TIMER, "Time Elapsed", "00:00")
 
         self.log_list = ft.ListView(
             expand=True,

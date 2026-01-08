@@ -30,7 +30,7 @@ class GlassCard(ft.Container):
                 color=ft.Colors.with_opacity(0.1, "#000000"),
                 offset=ft.Offset(0, 4),
             ),
-            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT),
+            animate=ft.Animation(300, ft.AnimationCurve.EASE_OUT),
             expand=expand,
         )
 
@@ -66,7 +66,7 @@ class AnimatedProgressRing(ft.Stack):
                 self.progress_ring,
                 ft.Container(
                     content=self.percentage_text,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment.CENTER,
                     width=size,
                     height=size,
                 ),
@@ -89,10 +89,10 @@ class SubtitleListItem(ft.Container):
         start_time: str,
         end_time: str,
         text: str,
-        status: str = "pending",  # pending, processing, completed, error
+        status: str = "pending",
         on_click=None,
     ):
-        self.theme = theme
+        self._app_theme = theme
 
         status_colors = {
             "pending": theme.text_secondary,
@@ -149,16 +149,16 @@ class SubtitleListItem(ft.Container):
             bgcolor=theme.surface,
             border=ft.border.all(1, "transparent"),
             on_click=on_click,
-            animate=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+            animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
             on_hover=self._on_hover,
         )
 
     def _on_hover(self, e):
         if e.data == "true":
-            self.bgcolor = self.theme.surface_light
-            self.border = ft.border.all(1, self.theme.border)
+            self.bgcolor = self._app_theme.surface_light
+            self.border = ft.border.all(1, self._app_theme.border)
         else:
-            self.bgcolor = self.theme.surface
+            self.bgcolor = self._app_theme.surface
             self.border = ft.border.all(1, "transparent")
         self.update()
 
@@ -169,18 +169,18 @@ class ProcessedResultCard(ft.Container):
         theme: Theme,
         original_text: str,
         processed_text: str,
-        action: str,  # merge, delete, correct, keep
+        action: str,
         reason: str,
         start_time: str,
         end_time: str,
     ):
-        self.theme = theme
+        self._app_theme = theme
 
         action_configs = {
-            "merge": {"color": theme.secondary, "icon": "merge_type"},
-            "delete": {"color": theme.error, "icon": "delete_outline"},
-            "correct": {"color": theme.success, "icon": "auto_fix_high"},
-            "keep": {"color": theme.text_secondary, "icon": "check_circle_outline"},
+            "merge": {"color": theme.secondary, "icon": ft.Icons.MERGE_TYPE},
+            "delete": {"color": theme.error, "icon": ft.Icons.DELETE_OUTLINE},
+            "correct": {"color": theme.success, "icon": ft.Icons.AUTO_FIX_HIGH},
+            "keep": {"color": theme.text_secondary, "icon": ft.Icons.CHECK_CIRCLE_OUTLINE},
         }
 
         config = action_configs.get(action.lower(), action_configs["keep"])
@@ -230,7 +230,7 @@ class ProcessedResultCard(ft.Container):
                                 ],
                                 expand=True,
                             ),
-                            ft.Icon("arrow_forward", color=theme.border, size=20),
+                            ft.Icon(ft.Icons.ARROW_FORWARD, color=theme.border, size=20),
                             ft.Column(
                                 controls=[
                                     ft.Text(
@@ -305,14 +305,14 @@ class StatsCard(GlassCard):
     def __init__(
         self,
         theme: Theme,
-        icon: str,
+        icon,
         label: str,
         value: str,
         trend: str | None = None,
         trend_up: bool = True,
     ):
         trend_color = theme.success if trend_up else theme.error
-        trend_icon = "trending_up" if trend_up else "trending_down"
+        trend_icon = ft.Icons.TRENDING_UP if trend_up else ft.Icons.TRENDING_DOWN
 
         content = ft.Row(
             controls=[

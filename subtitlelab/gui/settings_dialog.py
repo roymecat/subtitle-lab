@@ -17,40 +17,39 @@ class SettingsDialog(ft.AlertDialog):
         self.surface_color = theme.surface
         self.bgcolor = theme.surface
 
-        # --- State Holders ---
-        self.llm_refs = {}
-        self.proc_refs = {}
-        self.prompt_refs = {}
-        self.pricing_refs = {}
-        self.char_rows = []
+        self.llm_refs: dict = {}
+        self.proc_refs: dict = {}
+        self.prompt_refs: dict = {}
+        self.pricing_refs: dict = {}
+        self.char_rows: list = []
 
         self.content = self._build_content()
         self.actions = self._build_actions()
         self.actions_alignment = ft.MainAxisAlignment.END
 
     def _build_content(self):
-        self.tabs = ft.Tabs(
+        t = ft.Tabs(
             selected_index=0,
             animation_duration=300,
             tabs=[
                 ft.Tab(
                     text="LLM Configuration",
-                    icon="smart_toy_outlined",
+                    icon=ft.Icons.SMART_TOY_OUTLINED,
                     content=self._build_llm_tab(),
                 ),
                 ft.Tab(
                     text="Processing",
-                    icon="memory_outlined",
+                    icon=ft.Icons.MEMORY_OUTLINED,
                     content=self._build_processing_tab(),
                 ),
                 ft.Tab(
                     text="Prompts",
-                    icon="edit_note_outlined",
+                    icon=ft.Icons.EDIT_NOTE_OUTLINED,
                     content=self._build_prompt_tab(),
                 ),
                 ft.Tab(
                     text="Pricing",
-                    icon="attach_money_outlined",
+                    icon=ft.Icons.ATTACH_MONEY_OUTLINED,
                     content=self._build_pricing_tab(),
                 ),
             ],
@@ -62,7 +61,7 @@ class SettingsDialog(ft.AlertDialog):
         )
 
         return ft.Container(
-            content=self.tabs,
+            content=t,
             width=800,
             height=600,
             bgcolor=self.theme.surface,
@@ -79,7 +78,6 @@ class SettingsDialog(ft.AlertDialog):
         }
 
     def _build_llm_tab(self):
-        # Refs
         self.llm_refs["preset"] = ft.Dropdown(
             label="Preset",
             options=[
@@ -90,9 +88,13 @@ class SettingsDialog(ft.AlertDialog):
                 ft.dropdown.Option("claude", "Claude"),
                 ft.dropdown.Option("custom", "Custom"),
             ],
-            value="custom",  # Default, logic to detect later
+            value="custom",
             on_change=self._on_preset_change,
-            **self._input_style(),
+            border_color=self.theme.border,
+            text_size=14,
+            color=self.theme.text_primary,
+            focused_border_color=self.theme.primary,
+            label_style=ft.TextStyle(color=self.theme.text_secondary),
         )
         self.llm_refs["api_base"] = ft.TextField(
             label="API Endpoint URL", value=self.config.llm.api_base, **self._input_style()
@@ -135,10 +137,7 @@ class SettingsDialog(ft.AlertDialog):
             divisions=9,
             value=self.config.processing.concurrency,
             active_color=self.theme.primary,
-            on_change=lambda e: setattr(
-                self.llm_refs["concurrency_label"], "value", f"Concurrency: {int(e.control.value)}"
-            )
-            or self.llm_refs["concurrency_label"].update(),
+            on_change=self._on_concurrency_change,
         )
 
         self.llm_refs["json_mode"] = ft.Switch(
@@ -147,10 +146,9 @@ class SettingsDialog(ft.AlertDialog):
             active_color=self.theme.primary,
         )
 
-        # Test Connection Button
         test_btn = ft.ElevatedButton(
             "Test Connection",
-            icon="network_check",
+            icon=ft.Icons.NETWORK_CHECK,
             style=ft.ButtonStyle(
                 color=ft.Colors.WHITE,
                 bgcolor=self.theme.success,
@@ -186,6 +184,11 @@ class SettingsDialog(ft.AlertDialog):
             padding=20,
         )
 
+    def _on_concurrency_change(self, e):
+        if e.control.value is not None:
+            self.llm_refs["concurrency_label"].value = f"Concurrency: {int(e.control.value)}"
+            self.llm_refs["concurrency_label"].update()
+
     def _build_processing_tab(self):
         pc = self.config.processing
 
@@ -198,10 +201,7 @@ class SettingsDialog(ft.AlertDialog):
             divisions=pc.max_window_size - pc.min_window_size,
             value=pc.window_size,
             active_color=self.theme.primary,
-            on_change=lambda e: setattr(
-                self.proc_refs["window_size_label"], "value", f"Window Size: {int(e.control.value)}"
-            )
-            or self.proc_refs["window_size_label"].update(),
+            on_change=self._on_window_size_change,
         )
 
         self.proc_refs["overlap_label"] = ft.Text(
@@ -213,10 +213,7 @@ class SettingsDialog(ft.AlertDialog):
             divisions=10,
             value=pc.window_overlap,
             active_color=self.theme.primary,
-            on_change=lambda e: setattr(
-                self.proc_refs["overlap_label"], "value", f"Window Overlap: {int(e.control.value)}"
-            )
-            or self.proc_refs["overlap_label"].update(),
+            on_change=self._on_overlap_change,
         )
 
         self.proc_refs["semantic"] = ft.Switch(
@@ -249,12 +246,7 @@ class SettingsDialog(ft.AlertDialog):
             divisions=9,
             value=pc.quality_score_threshold,
             active_color=self.theme.primary,
-            on_change=lambda e: setattr(
-                self.proc_refs["score_threshold_label"],
-                "value",
-                f"Score Threshold: {e.control.value:.1f}",
-            )
-            or self.proc_refs["score_threshold_label"].update(),
+            on_change=self._on_score_threshold_change,
         )
 
         return ft.Container(
@@ -297,6 +289,23 @@ class SettingsDialog(ft.AlertDialog):
             padding=20,
         )
 
+    def _on_window_size_change(self, e):
+        if e.control.value is not None:
+            self.proc_refs["window_size_label"].value = f"Window Size: {int(e.control.value)}"
+            self.proc_refs["window_size_label"].update()
+
+    def _on_overlap_change(self, e):
+        if e.control.value is not None:
+            self.proc_refs["overlap_label"].value = f"Window Overlap: {int(e.control.value)}"
+            self.proc_refs["overlap_label"].update()
+
+    def _on_score_threshold_change(self, e):
+        if e.control.value is not None:
+            self.proc_refs[
+                "score_threshold_label"
+            ].value = f"Score Threshold: {e.control.value:.1f}"
+            self.proc_refs["score_threshold_label"].update()
+
     def _build_prompt_tab(self):
         up = self.config.user_prompt
 
@@ -328,14 +337,13 @@ class SettingsDialog(ft.AlertDialog):
             **self._input_style(),
         )
 
-        # Character Names Editor
         self.char_list = ft.Column(spacing=10)
         for wrong, correct in up.character_names.items():
             self._add_char_row(wrong, correct)
 
         add_char_btn = ft.OutlinedButton(
             "Add Character Pair",
-            icon="add",
+            icon=ft.Icons.ADD,
             style=ft.ButtonStyle(color=self.theme.primary),
             on_click=lambda e: self._add_char_row(),
         )
@@ -363,7 +371,7 @@ class SettingsDialog(ft.AlertDialog):
         )
 
     def _add_char_row(self, wrong="", correct=""):
-        row_ref = {}
+        row_ref: dict = {}
 
         def delete_row(e):
             self.char_list.controls.remove(row)
@@ -387,7 +395,7 @@ class SettingsDialog(ft.AlertDialog):
             **self._input_style(),
         )
         del_btn = ft.IconButton(
-            icon="delete_outline", icon_color=self.theme.error, on_click=delete_row
+            icon=ft.Icons.DELETE_OUTLINE, icon_color=self.theme.error, on_click=delete_row
         )
 
         row = ft.Row([w_input, c_input, del_btn], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
@@ -409,7 +417,7 @@ class SettingsDialog(ft.AlertDialog):
             label="Input Price ($ per 1M tokens)",
             value=str(pc.input_price),
             keyboard_type=ft.KeyboardType.NUMBER,
-            prefix_text="$",
+            prefix=ft.Text("$"),
             **self._input_style(),
         )
 
@@ -417,7 +425,7 @@ class SettingsDialog(ft.AlertDialog):
             label="Output Price ($ per 1M tokens)",
             value=str(pc.output_price),
             keyboard_type=ft.KeyboardType.NUMBER,
-            prefix_text="$",
+            prefix=ft.Text("$"),
             **self._input_style(),
         )
 
@@ -427,7 +435,7 @@ class SettingsDialog(ft.AlertDialog):
                     ft.Container(
                         content=ft.Row(
                             [
-                                ft.Icon("info_outline", color=self.theme.secondary),
+                                ft.Icon(ft.Icons.INFO_OUTLINE, color=self.theme.secondary),
                                 ft.Text(
                                     "Used for calculating estimated costs based on token usage.",
                                     color=self.theme.text_secondary,
@@ -482,19 +490,12 @@ class SettingsDialog(ft.AlertDialog):
             self.llm_refs["max_tokens"].update()
 
     def _test_connection(self, e):
-        # Implementation of a simple connection test
-        # In a real app, this would use the LLMClient
-        # For now, we simulate visual feedback
         e.control.text = "Testing..."
         e.control.disabled = True
         e.control.update()
 
-        # We can't easily do async sleep here without asyncio,
-        # but let's assume we just reset it for UI feedback
-        # Or better, show a snackbar (if page is available)
-
         if self.page:
-            self.page.show_snack_bar(ft.SnackBar(content=ft.Text("Connection test initiated...")))
+            self.page.open(ft.SnackBar(content=ft.Text("Connection test initiated...")))
 
         e.control.text = "Test Connection"
         e.control.disabled = False
@@ -502,33 +503,37 @@ class SettingsDialog(ft.AlertDialog):
 
     def _save(self, e):
         try:
-            # Update LLM Config
-            self.config.llm.api_base = self.llm_refs["api_base"].value
-            self.config.llm.api_key = self.llm_refs["api_key"].value
-            self.config.llm.model = self.llm_refs["model"].value
+            self.config.llm.api_base = self.llm_refs["api_base"].value or ""
+            self.config.llm.api_key = self.llm_refs["api_key"].value or ""
+            self.config.llm.model = self.llm_refs["model"].value or ""
             self.config.llm.context_window = int(self.llm_refs["context_window"].value or 0)
             self.config.llm.max_output_tokens = int(self.llm_refs["max_tokens"].value or 0)
             self.config.llm.timeout = int(self.llm_refs["timeout"].value or 60)
-            self.config.llm.enable_json_mode = self.llm_refs["json_mode"].value
+            self.config.llm.enable_json_mode = self.llm_refs["json_mode"].value or False
 
-            # Update Processing Config (Concurrency is in ProcessingConfig, but was on LLM tab)
-            self.config.processing.concurrency = int(self.llm_refs["concurrency"].value)
-            self.config.processing.window_size = int(self.proc_refs["window_size"].value)
-            self.config.processing.window_overlap = int(self.proc_refs["overlap"].value)
-            self.config.processing.enable_semantic_analysis = self.proc_refs["semantic"].value
-            self.config.processing.enable_pre_filter = self.proc_refs["prefilter"].value
-            self.config.processing.allow_dynamic_window = self.proc_refs["dynamic_window"].value
-            self.config.processing.enable_quality_scoring = self.proc_refs["quality_scoring"].value
+            self.config.processing.concurrency = int(self.llm_refs["concurrency"].value or 1)
+            self.config.processing.window_size = int(self.proc_refs["window_size"].value or 20)
+            self.config.processing.window_overlap = int(self.proc_refs["overlap"].value or 2)
+            self.config.processing.enable_semantic_analysis = (
+                self.proc_refs["semantic"].value or False
+            )
+            self.config.processing.enable_pre_filter = self.proc_refs["prefilter"].value or False
+            self.config.processing.allow_dynamic_window = (
+                self.proc_refs["dynamic_window"].value or False
+            )
+            self.config.processing.enable_quality_scoring = (
+                self.proc_refs["quality_scoring"].value or False
+            )
             self.config.processing.quality_score_threshold = float(
-                self.proc_refs["score_threshold"].value
+                self.proc_refs["score_threshold"].value or 0.8
             )
 
-            # Update Prompt Config
-            self.config.user_prompt.background_info = self.prompt_refs["background"].value
-            self.config.user_prompt.style_guide = self.prompt_refs["style"].value
-            self.config.user_prompt.custom_instructions = self.prompt_refs["instructions"].value
+            self.config.user_prompt.background_info = self.prompt_refs["background"].value or ""
+            self.config.user_prompt.style_guide = self.prompt_refs["style"].value or ""
+            self.config.user_prompt.custom_instructions = (
+                self.prompt_refs["instructions"].value or ""
+            )
 
-            # Reconstruct character names dict
             new_chars = {}
             for row in self.char_rows:
                 wrong = row["wrong"].value
@@ -537,19 +542,18 @@ class SettingsDialog(ft.AlertDialog):
                     new_chars[wrong] = correct
             self.config.user_prompt.character_names = new_chars
 
-            # Update Pricing Config
-            self.config.pricing.enabled = self.pricing_refs["enabled"].value
+            self.config.pricing.enabled = self.pricing_refs["enabled"].value or False
             self.config.pricing.input_price = float(self.pricing_refs["input"].value or 0.0)
             self.config.pricing.output_price = float(self.pricing_refs["output"].value or 0.0)
 
-            # Call save callback
             self._on_save_callback(self.config)
             self.open = False
-            self.page.update()
+            if self.page:
+                self.page.update()
 
         except ValueError as ex:
             if self.page:
-                self.page.show_snack_bar(
+                self.page.open(
                     ft.SnackBar(
                         content=ft.Text(f"Error saving settings: {str(ex)}"),
                         bgcolor=self.theme.error,
@@ -558,4 +562,5 @@ class SettingsDialog(ft.AlertDialog):
 
     def _cancel(self, e):
         self.open = False
-        self.page.update()
+        if self.page:
+            self.page.update()
