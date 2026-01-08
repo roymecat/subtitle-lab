@@ -299,7 +299,26 @@ class SubtitleProcessor:
         entries = []
         entry_map = {e.id: e for e in batch.entries}
 
+        if not isinstance(results, list):
+            self._log("warning", f"Invalid results format: expected list, got {type(results)}")
+            results = []
+
         for item in results:
+            if isinstance(item, str):
+                try:
+                    import json
+
+                    item = json.loads(item)
+                except json.JSONDecodeError:
+                    self._log(
+                        "warning", f"Skipping invalid item (not dict or valid json string): {item}"
+                    )
+                    continue
+
+            if not isinstance(item, dict):
+                self._log("warning", f"Skipping invalid item type: {type(item)}")
+                continue
+
             original_ids = item.get("original_ids", [])
             action_str = item.get("action", "keep").lower()
             text = item.get("text", "")
