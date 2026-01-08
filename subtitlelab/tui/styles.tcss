@@ -1,215 +1,236 @@
-/* Global Theme Variables */
-$primary: #818CF8;
-$primary-dark: #4F46E5;
-$secondary: #A78BFA;
-$accent: #22D3EE;
-$success: #34D399;
-$warning: #FBBF24;
-$error: #F87171;
-$background: #0F172A;
-$surface: #1E293B;
-$surface-light: #334155;
-$text: #FFFFFF;
-$text-muted: #94A3B8;
-$border: #475569;
+/* Catppuccin Macchiato Inspired Theme */
+$base: #24273a;
+$mantle: #1e2030;
+$crust: #181926;
+
+$text: #cad3f5;
+$subtext: #a5adcb;
+$overlay: #6e738d;
+$surface: #363a4f;
+
+$blue: #8aadf4;
+$lavender: #b7bdf8;
+$sapphire: #7dc4e4;
+$sky: #91d7e3;
+$teal: #8bd5ca;
+$green: #a6da95;
+$yellow: #eed49f;
+$peach: #f5a97f;
+$maroon: #ee99a0;
+$red: #ed8796;
+$mauve: #c6a0f6;
+$pink: #f5bde6;
+$flamingo: #f0c6c6;
+$rosewater: #f4dbd6;
 
 Screen {
-    background: $background;
+    background: $base;
     color: $text;
 }
 
-/* --- Layout Components --- */
+/* --- Layout --- */
+
+#app-grid {
+    layout: grid;
+    grid-size: 2;
+    grid-columns: 25 1fr;
+    grid-rows: 1fr;
+}
 
 #sidebar {
+    background: $mantle;
+    border-right: heavy $surface;
+    padding: 1;
+    row-span: 2;
     dock: left;
     width: 25;
     height: 100%;
-    background: $surface;
-    border-right: solid $border;
-    padding: 1;
 }
 
-#main-content {
+#content-area {
+    background: $base;
+    padding: 1;
     height: 100%;
-    width: 100%;
-    padding: 1;
-}
-
-#header {
-    height: 3;
-    dock: top;
-    content-align: center middle;
-    background: $surface;
-    border-bottom: solid $border;
-    color: $accent;
-    text-style: bold;
-}
-
-#footer {
-    height: 1;
-    dock: bottom;
-    background: $surface;
-    color: $text-muted;
 }
 
 /* --- Widgets --- */
 
-Button {
-    width: 100%;
-    margin-bottom: 1;
-    background: $surface-light;
-    border: none;
-    color: $text;
-}
-
-Button:hover {
-    background: $primary;
-    color: $background;
-}
-
-Button.primary {
-    background: $primary;
-    color: $background;
+/* Header & Logo */
+.brand {
+    color: $mauve;
     text-style: bold;
-}
-
-Button.primary:hover {
-    background: $primary-dark;
-}
-
-Button.success {
-    background: $success;
-    color: $background;
-}
-
-Button.error {
-    background: $error;
-    color: $background;
-}
-
-Label {
+    text-align: center;
     padding: 1;
-}
-
-Label.title {
-    text-style: bold;
-    color: $accent;
+    border-bottom: solid $surface;
     margin-bottom: 1;
 }
 
-Input {
-    border: solid $border;
+/* Sidebar Menu */
+ListView {
+    background: $mantle;
+    border: none;
+    margin-top: 1;
+}
+
+ListItem {
+    padding: 1 2;
+    background: $mantle;
+    color: $subtext;
+}
+
+ListItem:hover {
     background: $surface;
     color: $text;
-    padding: 0 1;
-    height: 3;
-    margin-bottom: 1;
 }
 
-Input:focus {
-    border: solid $primary;
+ListItem.-highlight {
+    background: $surface;
+    color: $lavender;
+    border-left: wide $lavender;
+    text-style: bold;
+}
+
+/* Content Panel */
+.content-header {
+    background: $surface;
+    color: $text;
+    padding: 1 2;
+    border-radius: 1;
+    margin-bottom: 1;
+    text-style: bold;
 }
 
 DataTable {
-    background: $surface;
-    border: solid $border;
-    height: 100%;
+    background: $base;
+    border: solid $surface;
+    scrollbar-color: $overlay;
+    height: 1fr;
 }
 
 DataTable > .datatable--header {
-    background: $surface-light;
-    color: $accent;
+    background: $surface;
+    color: $blue;
     text-style: bold;
 }
 
-Log {
+DataTable > .datatable--cursor {
     background: $surface;
-    border: solid $border;
-    height: 1fr;
-    color: $text-muted;
-    scrollbar-color: $primary;
+    color: $text;
 }
 
-ProgressBar {
-    width: 100%;
-    height: 1;
-    margin: 1 0;
-    color: $success;
-    background: $surface-light;
+DataTable > .datatable--highlight {
+    background: $mantle;
 }
 
-/* --- Stats Cards --- */
-
-.stats-container {
-    layout: grid;
-    grid-size: 4;
-    grid-gutter: 1;
-    height: 5;
-    margin-top: 1;
-    dock: bottom;
+/* File Picker */
+DirectoryTree {
+    background: $mantle;
+    border: solid $lavender;
+    padding: 1;
+    width: 60%;
+    height: 60%;
 }
 
-.stat-card {
-    background: $surface;
-    border: solid $border;
-    height: 100%;
-    content-align: center middle;
-}
-
-.stat-value {
-    text-style: bold;
-    color: $primary;
-    text-align: center;
-}
-
-.stat-label {
-    color: $text-muted;
-    text-align: center;
-}
-
-/* --- Settings Dialog --- */
-
-SettingsScreen {
+FilePickerScreen {
     align: center middle;
     background: rgba(0,0,0,0.7);
 }
 
-#settings-container {
-    width: 80%;
-    height: 80%;
-    background: $surface;
-    border: solid $primary;
-    padding: 2;
-}
-
-.dialog-buttons {
+/* Action Bar (Bottom of Sidebar) */
+.action-bar {
     dock: bottom;
-    height: 3;
-    align: right middle;
+    padding-top: 1;
+    border-top: solid $surface;
 }
 
-.dialog-buttons Button {
-    width: 15;
-    margin-left: 1;
+Button {
+    width: 100%;
+    background: $surface;
+    color: $text;
+    border: none;
+    margin-bottom: 1;
 }
 
+Button:hover {
+    background: $overlay;
+}
+
+Button.primary {
+    background: $blue;
+    color: $crust;
+    text-style: bold;
+}
+
+Button.success {
+    background: $green;
+    color: $crust;
+    text-style: bold;
+}
+
+Button.error {
+    background: $red;
+    color: $crust;
+}
+
+/* Logs & Progress */
+Log {
+    background: $mantle;
+    border: solid $surface;
+    color: $subtext;
+    height: 15;
+    dock: bottom;
+    margin-top: 1;
+    border-title-color: $lavender;
+}
+
+ProgressBar {
+    background: $surface;
+    bar-color: $green;
+    color: $text;
+}
+
+/* Settings */
 TabbedContent {
-    height: 1fr;
+    background: $base;
 }
 
 TabPane {
     padding: 1;
 }
 
-TextArea {
-    border: solid $border;
-    background: $surface;
+Label {
+    color: $subtext;
+    margin-top: 1;
+}
+
+Input {
+    background: $mantle;
+    border: solid $surface;
     color: $text;
-    height: 10;
+}
+
+Input:focus {
+    border: solid $lavender;
+}
+
+/* --- Stats --- */
+.stats-row {
+    layout: grid;
+    grid-size: 4;
+    grid-gutter: 1;
+    height: 3;
     margin-bottom: 1;
 }
 
-Switch {
-    background: $surface-light;
-    color: $success;
+.stat-item {
+    background: $mantle;
+    border: solid $surface;
+    padding: 0 1;
+    content-align: center middle;
+    color: $text;
+}
+
+.stat-value {
+    color: $peach;
+    text-style: bold;
 }
