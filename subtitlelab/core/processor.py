@@ -324,7 +324,14 @@ class SubtitleProcessor:
             text = item.get("text", "")
             reason = item.get("reason", "")
 
-            action = ProcessingAction(action_str)
+            try:
+                action = ProcessingAction(action_str)
+            except ValueError:
+                self._log(
+                    "warning",
+                    f"Invalid action '{action_str}' for ids {original_ids}, defaulting to KEEP",
+                )
+                action = ProcessingAction.KEEP
 
             if action == ProcessingAction.DELETE:
                 for oid in original_ids:
