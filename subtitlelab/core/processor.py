@@ -394,6 +394,9 @@ class SubtitleProcessor:
 
     async def _process_batch_internal(self, batch: Batch, result: BatchResult) -> BatchResult:
         """Internal batch processing logic."""
+        if not self._llm_client:
+            raise RuntimeError("LLM client not initialized")
+
         system_prompt = self._build_system_prompt()
         user_prompt = self._build_batch_prompt(batch)
 
@@ -651,6 +654,9 @@ class SubtitleProcessor:
         await self._run_semantic_analysis(entries)
 
         self._log("info", "Creating batches...")
+        if not self._chunker:
+            raise RuntimeError("Chunker not initialized")
+
         batches = self._chunker.create_batches(
             entries,
             batch_size=self.config.processing.window_size,
@@ -661,6 +667,8 @@ class SubtitleProcessor:
         self._emit_progress(0.1, f"Processing {len(batches)} batches...")
 
         async def process_with_semaphore(batch: Batch) -> BatchResult:
+            if not self._semaphore:
+                raise RuntimeError("Semaphore not initialized")
             async with self._semaphore:
                 if self._state.is_cancelled:
                     return BatchResult(
@@ -680,8 +688,13 @@ class SubtitleProcessor:
                 # Convert exception to failed BatchResult
                 batch_result = BatchResult(batch_index=i, success=False, error=str(result))
                 self._emit_error(result, f"Batch {i} failed with exception")
-            else:
+            elif isinstance(result, BatchResult):
                 batch_result = result
+            else:
+                # Should not happen
+                batch_result = BatchResult(
+                    batch_index=i, success=False, error="Unknown result type"
+                )
 
             self._state.batch_results.append(batch_result)
             self._state.stats.update_from_batch(batch_result)
