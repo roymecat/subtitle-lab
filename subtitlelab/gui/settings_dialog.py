@@ -1,566 +1,348 @@
-from typing import Callable
-import flet as ft
+from PyQt6.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QTabWidget,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QSpinBox,
+    QDoubleSpinBox,
+    QCheckBox,
+    QSlider,
+    QTextEdit,
+    QPushButton,
+    QFormLayout,
+    QGroupBox,
+    QScrollArea,
+    QMessageBox,
+)
+from PyQt6.QtCore import Qt
+
 from .theme import Theme
-from ..core.config import AppConfig, LLMConfig
+from .translations import get_translation
+from ..core.config import AppConfig
 
 
-class SettingsDialog(ft.AlertDialog):
-    def __init__(self, config: AppConfig, theme: Theme, on_save: Callable):
-        super().__init__()
-        self.config = config
+class SettingsDialog(QDialog):
+    def __init__(self, config: AppConfig, theme: Theme, parent=None):
+        super().__init__(parent)
+        self.config = AppConfig.load()
         self.theme = theme
-        self._on_save_callback = on_save
-        self.modal = True
-        self.title = ft.Text(
-            "Settings", size=20, weight=ft.FontWeight.BOLD, color=theme.text_primary
+        # Get language from parent if available
+        self.lang = getattr(parent, "lang", "en_US") if parent else "en_US"
+        self._setup_ui()
+        self._load_config()
+
+    def _tr(self, text: str) -> str:
+        """Translate text using the current language."""
+        return get_translation(text, self.lang)
+
+    def _setup_ui(self):
+        self.setWindowTitle(self._tr("Settings"))
+        self.setMinimumSize(700, 550)
+        self.resize(750, 600)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(16)
+
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self._create_llm_tab(), self._tr("🤖 LLM"))
+        self.tabs.addTab(self._create_processing_tab(), self._tr("⚙️ Processing"))
+        self.tabs.addTab(self._create_prompt_tab(), self._tr("📝 Prompts"))
+        self.tabs.addTab(self._create_pricing_tab(), self._tr("💰 Pricing"))
+        layout.addWidget(self.tabs)
+
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+
+        cancel_btn = QPushButton(self._tr("Cancel"))
+        cancel_btn.setProperty("class", "secondary")
+        cancel_btn.clicked.connect(self.reject)
+        btn_layout.addWidget(cancel_btn)
+
+        save_btn = QPushButton(self._tr("Save"))
+        save_btn.clicked.connect(self._save_config)
+        btn_layout.addWidget(save_btn)
+
+        layout.addLayout(btn_layout)
+
+    def _create_llm_tab(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(16)
+
+        preset_group = QGroupBox(self._tr("Preset"))
+        preset_layout = QFormLayout(preset_group)
+        self.preset_combo = QComboBox()
+        self.preset_combo.addItems(
+            ["OpenAI GPT-4o", "OpenAI GPT-4o Mini", "DeepSeek", "Ollama", "Claude", "Custom"]
         )
-        self.surface_color = theme.surface
-        self.bgcolor = theme.surface
+        self.preset_combo.currentTextChanged.connect(self._on_preset_change)
+        preset_layout.addRow(self._tr("Provider:"), self.preset_combo)
+        layout.addWidget(preset_group)
 
-        self.llm_refs: dict = {}
-        self.proc_refs: dict = {}
-        self.prompt_refs: dict = {}
-        self.pricing_refs: dict = {}
-        self.char_rows: list = []
+        api_group = QGroupBox(self._tr("API Configuration"))
+        api_layout = QFormLayout(api_group)
 
-        self.content = self._build_content()
-        self.actions = self._build_actions()
-        self.actions_alignment = ft.MainAxisAlignment.END
+        self.api_base_edit = QLineEdit()
+        self.api_base_edit.setPlaceholderText("https://api.openai.com/v1")
+        api_layout.addRow(self._tr("API Endpoint:"), self.api_base_edit)
 
-    def _build_content(self):
-        t = ft.Tabs(
-            selected_index=0,
-            animation_duration=300,
-            tabs=[
-                ft.Tab(
-                    text="LLM Configuration",
-                    icon=ft.Icons.SMART_TOY_OUTLINED,
-                    content=self._build_llm_tab(),
-                ),
-                ft.Tab(
-                    text="Processing",
-                    icon=ft.Icons.MEMORY_OUTLINED,
-                    content=self._build_processing_tab(),
-                ),
-                ft.Tab(
-                    text="Prompts",
-                    icon=ft.Icons.EDIT_NOTE_OUTLINED,
-                    content=self._build_prompt_tab(),
-                ),
-                ft.Tab(
-                    text="Pricing",
-                    icon=ft.Icons.ATTACH_MONEY_OUTLINED,
-                    content=self._build_pricing_tab(),
-                ),
-            ],
-            expand=True,
-            divider_color=self.theme.border,
-            indicator_color=self.theme.primary,
-            label_color=self.theme.primary,
-            unselected_label_color=self.theme.text_secondary,
+        self.api_key_edit = QLineEdit()
+        self.api_key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.api_key_edit.setPlaceholderText("sk-...")
+        api_layout.addRow(self._tr("API Key:"), self.api_key_edit)
+
+        self.model_edit = QLineEdit()
+        self.model_edit.setPlaceholderText("gpt-4o")
+        api_layout.addRow(self._tr("Model:"), self.model_edit)
+
+        layout.addWidget(api_group)
+
+        params_group = QGroupBox(self._tr("Parameters"))
+        params_layout = QFormLayout(params_group)
+
+        self.context_window_spin = QSpinBox()
+        self.context_window_spin.setRange(1000, 200000)
+        self.context_window_spin.setSingleStep(1000)
+        params_layout.addRow(self._tr("Context Window:"), self.context_window_spin)
+
+        self.max_tokens_spin = QSpinBox()
+        self.max_tokens_spin.setRange(100, 32000)
+        self.max_tokens_spin.setSingleStep(100)
+        params_layout.addRow(self._tr("Max Output Tokens:"), self.max_tokens_spin)
+
+        self.timeout_spin = QSpinBox()
+        self.timeout_spin.setRange(10, 600)
+        self.timeout_spin.setSuffix(" s")
+        params_layout.addRow(self._tr("Timeout:"), self.timeout_spin)
+
+        self.concurrency_spin = QSpinBox()
+        self.concurrency_spin.setRange(1, 10)
+        params_layout.addRow(self._tr("Concurrency:"), self.concurrency_spin)
+
+        self.json_mode_check = QCheckBox(self._tr("Enable JSON Mode"))
+        params_layout.addRow("", self.json_mode_check)
+
+        layout.addWidget(params_group)
+        layout.addStretch()
+
+        scroll.setWidget(widget)
+        return scroll
+
+    def _create_processing_tab(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(16)
+
+        chunk_group = QGroupBox(self._tr("Chunking Strategy"))
+        chunk_layout = QFormLayout(chunk_group)
+
+        self.window_size_spin = QSpinBox()
+        self.window_size_spin.setRange(5, 100)
+        chunk_layout.addRow(self._tr("Window Size:"), self.window_size_spin)
+
+        self.overlap_spin = QSpinBox()
+        self.overlap_spin.setRange(0, 10)
+        chunk_layout.addRow(self._tr("Window Overlap:"), self.overlap_spin)
+
+        layout.addWidget(chunk_group)
+
+        opt_group = QGroupBox(self._tr("Optimization"))
+        opt_layout = QVBoxLayout(opt_group)
+
+        self.semantic_check = QCheckBox(self._tr("Enable Semantic Analysis"))
+        opt_layout.addWidget(self.semantic_check)
+
+        self.prefilter_check = QCheckBox(self._tr("Enable Pre-filter"))
+        opt_layout.addWidget(self.prefilter_check)
+
+        self.dynamic_window_check = QCheckBox(self._tr("Allow Dynamic Window"))
+        opt_layout.addWidget(self.dynamic_window_check)
+
+        layout.addWidget(opt_group)
+
+        quality_group = QGroupBox(self._tr("Quality Scoring"))
+        quality_layout = QFormLayout(quality_group)
+
+        self.quality_scoring_check = QCheckBox(self._tr("Enable Quality Scoring (LLM)"))
+        quality_layout.addRow("", self.quality_scoring_check)
+
+        self.score_threshold_spin = QDoubleSpinBox()
+        self.score_threshold_spin.setRange(0.5, 0.95)
+        self.score_threshold_spin.setSingleStep(0.05)
+        self.score_threshold_spin.setDecimals(2)
+        quality_layout.addRow(self._tr("Score Threshold:"), self.score_threshold_spin)
+
+        layout.addWidget(quality_group)
+        layout.addStretch()
+
+        scroll.setWidget(widget)
+        return scroll
+
+    def _create_prompt_tab(self) -> QWidget:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(16)
+
+        bg_group = QGroupBox(self._tr("Background Information"))
+        bg_layout = QVBoxLayout(bg_group)
+        self.background_edit = QTextEdit()
+        self.background_edit.setPlaceholderText(self._tr("Context about the video content..."))
+        self.background_edit.setMaximumHeight(100)
+        bg_layout.addWidget(self.background_edit)
+        layout.addWidget(bg_group)
+
+        style_group = QGroupBox(self._tr("Style Guide"))
+        style_layout = QVBoxLayout(style_group)
+        self.style_edit = QTextEdit()
+        self.style_edit.setPlaceholderText(self._tr("Translation tone, specific terminology..."))
+        self.style_edit.setMaximumHeight(100)
+        style_layout.addWidget(self.style_edit)
+        layout.addWidget(style_group)
+
+        instr_group = QGroupBox(self._tr("Custom Instructions"))
+        instr_layout = QVBoxLayout(instr_group)
+        self.instructions_edit = QTextEdit()
+        self.instructions_edit.setPlaceholderText(self._tr("Any additional prompt instructions..."))
+        self.instructions_edit.setMaximumHeight(100)
+        instr_layout.addWidget(self.instructions_edit)
+        layout.addWidget(instr_group)
+
+        layout.addStretch()
+
+        scroll.setWidget(widget)
+        return scroll
+
+    def _create_pricing_tab(self) -> QWidget:
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(16)
+
+        info_label = QLabel(
+            self._tr("ℹ️ Used for calculating estimated costs based on token usage.")
         )
+        info_label.setProperty("class", "secondary")
+        info_label.setWordWrap(True)
+        layout.addWidget(info_label)
 
-        return ft.Container(
-            content=t,
-            width=800,
-            height=600,
-            bgcolor=self.theme.surface,
-        )
+        pricing_group = QGroupBox(self._tr("Token Pricing"))
+        pricing_layout = QFormLayout(pricing_group)
 
-    def _input_style(self):
-        return {
-            "border_color": self.theme.border,
-            "text_size": 14,
-            "color": self.theme.text_primary,
-            "cursor_color": self.theme.primary,
-            "focused_border_color": self.theme.primary,
-            "label_style": ft.TextStyle(color=self.theme.text_secondary),
+        self.pricing_enabled_check = QCheckBox(self._tr("Enable Cost Estimation"))
+        pricing_layout.addRow("", self.pricing_enabled_check)
+
+        self.input_price_spin = QDoubleSpinBox()
+        self.input_price_spin.setRange(0, 100)
+        self.input_price_spin.setDecimals(4)
+        self.input_price_spin.setPrefix("$ ")
+        self.input_price_spin.setSuffix(" / 1M tokens")
+        pricing_layout.addRow(self._tr("Input Price:"), self.input_price_spin)
+
+        self.output_price_spin = QDoubleSpinBox()
+        self.output_price_spin.setRange(0, 100)
+        self.output_price_spin.setDecimals(4)
+        self.output_price_spin.setPrefix("$ ")
+        self.output_price_spin.setSuffix(" / 1M tokens")
+        pricing_layout.addRow(self._tr("Output Price:"), self.output_price_spin)
+
+        layout.addWidget(pricing_group)
+        layout.addStretch()
+
+        return widget
+
+    def _on_preset_change(self, preset: str):
+        presets = {
+            "OpenAI GPT-4o": ("https://api.openai.com/v1", "gpt-4o", 128000, 4096),
+            "OpenAI GPT-4o Mini": ("https://api.openai.com/v1", "gpt-4o-mini", 128000, 16384),
+            "DeepSeek": ("https://api.deepseek.com/v1", "deepseek-chat", 64000, 4096),
+            "Ollama": ("http://localhost:11434/v1", "llama3", 8192, 2048),
+            "Claude": ("https://api.anthropic.com/v1", "claude-3-opus-20240229", 200000, 4096),
         }
 
-    def _build_llm_tab(self):
-        self.llm_refs["preset"] = ft.Dropdown(
-            label="Preset",
-            options=[
-                ft.dropdown.Option("openai-gpt4o", "OpenAI GPT-4o"),
-                ft.dropdown.Option("openai-gpt4o-mini", "OpenAI GPT-4o Mini"),
-                ft.dropdown.Option("deepseek", "DeepSeek"),
-                ft.dropdown.Option("ollama", "Ollama"),
-                ft.dropdown.Option("claude", "Claude"),
-                ft.dropdown.Option("custom", "Custom"),
-            ],
-            value="custom",
-            on_change=self._on_preset_change,
-            border_color=self.theme.border,
-            text_size=14,
-            color=self.theme.text_primary,
-            focused_border_color=self.theme.primary,
-            label_style=ft.TextStyle(color=self.theme.text_secondary),
-        )
-        self.llm_refs["api_base"] = ft.TextField(
-            label="API Endpoint URL", value=self.config.llm.api_base, **self._input_style()
-        )
-        self.llm_refs["api_key"] = ft.TextField(
-            label="API Key",
-            password=True,
-            can_reveal_password=True,
-            value=self.config.llm.api_key,
-            **self._input_style(),
-        )
-        self.llm_refs["model"] = ft.TextField(
-            label="Model Name", value=self.config.llm.model, **self._input_style()
-        )
-        self.llm_refs["context_window"] = ft.TextField(
-            label="Context Window",
-            value=str(self.config.llm.context_window),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            **self._input_style(),
-        )
-        self.llm_refs["max_tokens"] = ft.TextField(
-            label="Max Output Tokens",
-            value=str(self.config.llm.max_output_tokens),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            **self._input_style(),
-        )
-        self.llm_refs["timeout"] = ft.TextField(
-            label="Timeout (s)",
-            value=str(self.config.llm.timeout),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            **self._input_style(),
-        )
+        if preset in presets:
+            api_base, model, context, max_tokens = presets[preset]
+            self.api_base_edit.setText(api_base)
+            self.model_edit.setText(model)
+            self.context_window_spin.setValue(context)
+            self.max_tokens_spin.setValue(max_tokens)
 
-        self.llm_refs["concurrency_label"] = ft.Text(
-            f"Concurrency: {self.config.processing.concurrency}", color=self.theme.text_primary
-        )
-        self.llm_refs["concurrency"] = ft.Slider(
-            min=1,
-            max=10,
-            divisions=9,
-            value=self.config.processing.concurrency,
-            active_color=self.theme.primary,
-            on_change=self._on_concurrency_change,
-        )
+    def _load_config(self):
+        llm = self.config.llm
+        self.api_base_edit.setText(llm.api_base)
+        self.api_key_edit.setText(llm.api_key)
+        self.model_edit.setText(llm.model)
+        self.context_window_spin.setValue(llm.context_window)
+        self.max_tokens_spin.setValue(llm.max_output_tokens)
+        self.timeout_spin.setValue(llm.timeout)
+        self.json_mode_check.setChecked(llm.enable_json_mode)
 
-        self.llm_refs["json_mode"] = ft.Switch(
-            label="Enable JSON Mode",
-            value=self.config.llm.enable_json_mode,
-            active_color=self.theme.primary,
-        )
+        proc = self.config.processing
+        self.concurrency_spin.setValue(proc.concurrency)
+        self.window_size_spin.setValue(proc.window_size)
+        self.overlap_spin.setValue(proc.window_overlap)
+        self.semantic_check.setChecked(proc.enable_semantic_analysis)
+        self.prefilter_check.setChecked(proc.enable_pre_filter)
+        self.dynamic_window_check.setChecked(proc.allow_dynamic_window)
+        self.quality_scoring_check.setChecked(proc.enable_quality_scoring)
+        self.score_threshold_spin.setValue(proc.quality_score_threshold)
 
-        test_btn = ft.ElevatedButton(
-            "Test Connection",
-            icon=ft.Icons.NETWORK_CHECK,
-            style=ft.ButtonStyle(
-                color=ft.Colors.WHITE,
-                bgcolor=self.theme.success,
-                shape=ft.RoundedRectangleBorder(radius=self.theme.radius.SM),
-            ),
-            on_click=self._test_connection,
-        )
+        prompt = self.config.user_prompt
+        self.background_edit.setPlainText(prompt.background_info)
+        self.style_edit.setPlainText(prompt.style_guide)
+        self.instructions_edit.setPlainText(prompt.custom_instructions)
 
-        return ft.Container(
-            content=ft.Column(
-                [
-                    self.llm_refs["preset"],
-                    ft.Divider(color=self.theme.border),
-                    self.llm_refs["api_base"],
-                    self.llm_refs["api_key"],
-                    self.llm_refs["model"],
-                    ft.Row(
-                        [
-                            ft.Container(content=self.llm_refs["context_window"], expand=True),
-                            ft.Container(content=self.llm_refs["max_tokens"], expand=True),
-                            ft.Container(content=self.llm_refs["timeout"], expand=True),
-                        ],
-                        spacing=20,
-                    ),
-                    ft.Divider(color=self.theme.border),
-                    self.llm_refs["concurrency_label"],
-                    self.llm_refs["concurrency"],
-                    ft.Row([self.llm_refs["json_mode"], ft.Container(expand=True), test_btn]),
-                ],
-                scroll=ft.ScrollMode.AUTO,
-                spacing=15,
-            ),
-            padding=20,
-        )
+        pricing = self.config.pricing
+        self.pricing_enabled_check.setChecked(pricing.enabled)
+        self.input_price_spin.setValue(pricing.input_price)
+        self.output_price_spin.setValue(pricing.output_price)
 
-    def _on_concurrency_change(self, e):
-        if e.control.value is not None:
-            self.llm_refs["concurrency_label"].value = f"Concurrency: {int(e.control.value)}"
-            self.llm_refs["concurrency_label"].update()
-
-    def _build_processing_tab(self):
-        pc = self.config.processing
-
-        self.proc_refs["window_size_label"] = ft.Text(
-            f"Window Size: {pc.window_size}", color=self.theme.text_primary
-        )
-        self.proc_refs["window_size"] = ft.Slider(
-            min=pc.min_window_size,
-            max=pc.max_window_size,
-            divisions=pc.max_window_size - pc.min_window_size,
-            value=pc.window_size,
-            active_color=self.theme.primary,
-            on_change=self._on_window_size_change,
-        )
-
-        self.proc_refs["overlap_label"] = ft.Text(
-            f"Window Overlap: {pc.window_overlap}", color=self.theme.text_primary
-        )
-        self.proc_refs["overlap"] = ft.Slider(
-            min=0,
-            max=10,
-            divisions=10,
-            value=pc.window_overlap,
-            active_color=self.theme.primary,
-            on_change=self._on_overlap_change,
-        )
-
-        self.proc_refs["semantic"] = ft.Switch(
-            label="Enable Semantic Analysis",
-            value=pc.enable_semantic_analysis,
-            active_color=self.theme.primary,
-        )
-        self.proc_refs["prefilter"] = ft.Switch(
-            label="Enable Pre-filter", value=pc.enable_pre_filter, active_color=self.theme.primary
-        )
-        self.proc_refs["dynamic_window"] = ft.Switch(
-            label="Allow Dynamic Window",
-            value=pc.allow_dynamic_window,
-            active_color=self.theme.primary,
-        )
-
-        self.proc_refs["quality_scoring"] = ft.Switch(
-            label="Enable Quality Scoring (LLM)",
-            value=pc.enable_quality_scoring,
-            active_color=self.theme.primary,
-        )
-
-        self.proc_refs["score_threshold_label"] = ft.Text(
-            f"Score Threshold: {pc.quality_score_threshold:.1f}",
-            color=self.theme.text_primary,
-        )
-        self.proc_refs["score_threshold"] = ft.Slider(
-            min=0.5,
-            max=0.95,
-            divisions=9,
-            value=pc.quality_score_threshold,
-            active_color=self.theme.primary,
-            on_change=self._on_score_threshold_change,
-        )
-
-        return ft.Container(
-            content=ft.Column(
-                [
-                    ft.Text(
-                        "Chunking Strategy",
-                        size=16,
-                        weight=ft.FontWeight.BOLD,
-                        color=self.theme.text_primary,
-                    ),
-                    self.proc_refs["window_size_label"],
-                    self.proc_refs["window_size"],
-                    self.proc_refs["overlap_label"],
-                    self.proc_refs["overlap"],
-                    ft.Divider(color=self.theme.border),
-                    ft.Text(
-                        "Optimization",
-                        size=16,
-                        weight=ft.FontWeight.BOLD,
-                        color=self.theme.text_primary,
-                    ),
-                    self.proc_refs["semantic"],
-                    self.proc_refs["prefilter"],
-                    self.proc_refs["dynamic_window"],
-                    ft.Divider(color=self.theme.border),
-                    ft.Text(
-                        "Quality Scoring",
-                        size=16,
-                        weight=ft.FontWeight.BOLD,
-                        color=self.theme.text_primary,
-                    ),
-                    self.proc_refs["quality_scoring"],
-                    self.proc_refs["score_threshold_label"],
-                    self.proc_refs["score_threshold"],
-                ],
-                scroll=ft.ScrollMode.AUTO,
-                spacing=20,
-            ),
-            padding=20,
-        )
-
-    def _on_window_size_change(self, e):
-        if e.control.value is not None:
-            self.proc_refs["window_size_label"].value = f"Window Size: {int(e.control.value)}"
-            self.proc_refs["window_size_label"].update()
-
-    def _on_overlap_change(self, e):
-        if e.control.value is not None:
-            self.proc_refs["overlap_label"].value = f"Window Overlap: {int(e.control.value)}"
-            self.proc_refs["overlap_label"].update()
-
-    def _on_score_threshold_change(self, e):
-        if e.control.value is not None:
-            self.proc_refs[
-                "score_threshold_label"
-            ].value = f"Score Threshold: {e.control.value:.1f}"
-            self.proc_refs["score_threshold_label"].update()
-
-    def _build_prompt_tab(self):
-        up = self.config.user_prompt
-
-        self.prompt_refs["background"] = ft.TextField(
-            label="Background Information",
-            multiline=True,
-            min_lines=3,
-            max_lines=5,
-            value=up.background_info,
-            hint_text="Context about the video content...",
-            **self._input_style(),
-        )
-
-        self.prompt_refs["style"] = ft.TextField(
-            label="Style Guide",
-            multiline=True,
-            min_lines=3,
-            value=up.style_guide,
-            hint_text="Translation tone, specific terminology...",
-            **self._input_style(),
-        )
-
-        self.prompt_refs["instructions"] = ft.TextField(
-            label="Custom Instructions",
-            multiline=True,
-            min_lines=3,
-            value=up.custom_instructions,
-            hint_text="Any additional prompt instructions...",
-            **self._input_style(),
-        )
-
-        self.char_list = ft.Column(spacing=10)
-        for wrong, correct in up.character_names.items():
-            self._add_char_row(wrong, correct)
-
-        add_char_btn = ft.OutlinedButton(
-            "Add Character Pair",
-            icon=ft.Icons.ADD,
-            style=ft.ButtonStyle(color=self.theme.primary),
-            on_click=lambda e: self._add_char_row(),
-        )
-
-        return ft.Container(
-            content=ft.Column(
-                [
-                    self.prompt_refs["background"],
-                    ft.Divider(color=self.theme.border),
-                    ft.Text(
-                        "Character Names (Find -> Replace)",
-                        weight=ft.FontWeight.BOLD,
-                        color=self.theme.text_primary,
-                    ),
-                    self.char_list,
-                    add_char_btn,
-                    ft.Divider(color=self.theme.border),
-                    self.prompt_refs["style"],
-                    self.prompt_refs["instructions"],
-                ],
-                scroll=ft.ScrollMode.AUTO,
-                spacing=15,
-            ),
-            padding=20,
-        )
-
-    def _add_char_row(self, wrong="", correct=""):
-        row_ref: dict = {}
-
-        def delete_row(e):
-            self.char_list.controls.remove(row)
-            self.char_rows.remove(row_ref)
-            self.char_list.update()
-
-        w_input = ft.TextField(
-            value=wrong,
-            label="Original Name",
-            expand=True,
-            height=40,
-            content_padding=10,
-            **self._input_style(),
-        )
-        c_input = ft.TextField(
-            value=correct,
-            label="Correct Name",
-            expand=True,
-            height=40,
-            content_padding=10,
-            **self._input_style(),
-        )
-        del_btn = ft.IconButton(
-            icon=ft.Icons.DELETE_OUTLINE, icon_color=self.theme.error, on_click=delete_row
-        )
-
-        row = ft.Row([w_input, c_input, del_btn], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-        row_ref.update({"wrong": w_input, "correct": c_input, "row": row})
-
-        self.char_rows.append(row_ref)
-        self.char_list.controls.append(row)
-        if self.page:
-            self.char_list.update()
-
-    def _build_pricing_tab(self):
-        pc = self.config.pricing
-
-        self.pricing_refs["enabled"] = ft.Switch(
-            label="Enable Cost Estimation", value=pc.enabled, active_color=self.theme.primary
-        )
-
-        self.pricing_refs["input"] = ft.TextField(
-            label="Input Price ($ per 1M tokens)",
-            value=str(pc.input_price),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            prefix=ft.Text("$"),
-            **self._input_style(),
-        )
-
-        self.pricing_refs["output"] = ft.TextField(
-            label="Output Price ($ per 1M tokens)",
-            value=str(pc.output_price),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            prefix=ft.Text("$"),
-            **self._input_style(),
-        )
-
-        return ft.Container(
-            content=ft.Column(
-                [
-                    ft.Container(
-                        content=ft.Row(
-                            [
-                                ft.Icon(ft.Icons.INFO_OUTLINE, color=self.theme.secondary),
-                                ft.Text(
-                                    "Used for calculating estimated costs based on token usage.",
-                                    color=self.theme.text_secondary,
-                                    size=12,
-                                ),
-                            ]
-                        ),
-                        bgcolor=self.theme.surface_light,
-                        padding=10,
-                        border_radius=self.theme.radius.SM,
-                    ),
-                    self.pricing_refs["enabled"],
-                    self.pricing_refs["input"],
-                    self.pricing_refs["output"],
-                ],
-                scroll=ft.ScrollMode.AUTO,
-                spacing=20,
-            ),
-            padding=20,
-        )
-
-    def _build_actions(self):
-        return [
-            ft.TextButton(
-                "Cancel",
-                style=ft.ButtonStyle(color=self.theme.text_secondary),
-                on_click=self._cancel,
-            ),
-            ft.ElevatedButton(
-                "Save Changes",
-                style=ft.ButtonStyle(
-                    color=ft.Colors.WHITE,
-                    bgcolor=self.theme.primary,
-                    shape=ft.RoundedRectangleBorder(radius=self.theme.radius.SM),
-                ),
-                on_click=self._save,
-            ),
-        ]
-
-    def _on_preset_change(self, e):
-        preset_key = e.control.value
-        presets = self.config.llm.PRESETS
-        if preset_key in presets:
-            preset = presets[preset_key]
-            self.llm_refs["api_base"].value = preset.get("api_base", "")
-            self.llm_refs["model"].value = preset.get("model", "")
-            self.llm_refs["context_window"].value = str(preset.get("context_window", ""))
-            self.llm_refs["max_tokens"].value = str(preset.get("max_output_tokens", ""))
-            self.llm_refs["api_base"].update()
-            self.llm_refs["model"].update()
-            self.llm_refs["context_window"].update()
-            self.llm_refs["max_tokens"].update()
-
-    def _test_connection(self, e):
-        e.control.text = "Testing..."
-        e.control.disabled = True
-        e.control.update()
-
-        if self.page:
-            self.page.open(ft.SnackBar(content=ft.Text("Connection test initiated...")))
-
-        e.control.text = "Test Connection"
-        e.control.disabled = False
-        e.control.update()
-
-    def _save(self, e):
+    def _save_config(self):
         try:
-            self.config.llm.api_base = self.llm_refs["api_base"].value or ""
-            self.config.llm.api_key = self.llm_refs["api_key"].value or ""
-            self.config.llm.model = self.llm_refs["model"].value or ""
-            self.config.llm.context_window = int(self.llm_refs["context_window"].value or 0)
-            self.config.llm.max_output_tokens = int(self.llm_refs["max_tokens"].value or 0)
-            self.config.llm.timeout = int(self.llm_refs["timeout"].value or 60)
-            self.config.llm.enable_json_mode = self.llm_refs["json_mode"].value or False
+            self.config.llm.api_base = self.api_base_edit.text()
+            self.config.llm.api_key = self.api_key_edit.text()
+            self.config.llm.model = self.model_edit.text()
+            self.config.llm.context_window = self.context_window_spin.value()
+            self.config.llm.max_output_tokens = self.max_tokens_spin.value()
+            self.config.llm.timeout = self.timeout_spin.value()
+            self.config.llm.enable_json_mode = self.json_mode_check.isChecked()
 
-            self.config.processing.concurrency = int(self.llm_refs["concurrency"].value or 1)
-            self.config.processing.window_size = int(self.proc_refs["window_size"].value or 20)
-            self.config.processing.window_overlap = int(self.proc_refs["overlap"].value or 2)
-            self.config.processing.enable_semantic_analysis = (
-                self.proc_refs["semantic"].value or False
-            )
-            self.config.processing.enable_pre_filter = self.proc_refs["prefilter"].value or False
-            self.config.processing.allow_dynamic_window = (
-                self.proc_refs["dynamic_window"].value or False
-            )
-            self.config.processing.enable_quality_scoring = (
-                self.proc_refs["quality_scoring"].value or False
-            )
-            self.config.processing.quality_score_threshold = float(
-                self.proc_refs["score_threshold"].value or 0.8
-            )
+            self.config.processing.concurrency = self.concurrency_spin.value()
+            self.config.processing.window_size = self.window_size_spin.value()
+            self.config.processing.window_overlap = self.overlap_spin.value()
+            self.config.processing.enable_semantic_analysis = self.semantic_check.isChecked()
+            self.config.processing.enable_pre_filter = self.prefilter_check.isChecked()
+            self.config.processing.allow_dynamic_window = self.dynamic_window_check.isChecked()
+            self.config.processing.enable_quality_scoring = self.quality_scoring_check.isChecked()
+            self.config.processing.quality_score_threshold = self.score_threshold_spin.value()
 
-            self.config.user_prompt.background_info = self.prompt_refs["background"].value or ""
-            self.config.user_prompt.style_guide = self.prompt_refs["style"].value or ""
-            self.config.user_prompt.custom_instructions = (
-                self.prompt_refs["instructions"].value or ""
-            )
+            self.config.user_prompt.background_info = self.background_edit.toPlainText()
+            self.config.user_prompt.style_guide = self.style_edit.toPlainText()
+            self.config.user_prompt.custom_instructions = self.instructions_edit.toPlainText()
 
-            new_chars = {}
-            for row in self.char_rows:
-                wrong = row["wrong"].value
-                correct = row["correct"].value
-                if wrong and correct:
-                    new_chars[wrong] = correct
-            self.config.user_prompt.character_names = new_chars
+            self.config.pricing.enabled = self.pricing_enabled_check.isChecked()
+            self.config.pricing.input_price = self.input_price_spin.value()
+            self.config.pricing.output_price = self.output_price_spin.value()
 
-            self.config.pricing.enabled = self.pricing_refs["enabled"].value or False
-            self.config.pricing.input_price = float(self.pricing_refs["input"].value or 0.0)
-            self.config.pricing.output_price = float(self.pricing_refs["output"].value or 0.0)
+            self.accept()
 
-            self._on_save_callback(self.config)
-            self.open = False
-            if self.page:
-                self.page.update()
+        except Exception as e:
+            QMessageBox.critical(self, self._tr("Error"), str(e))
 
-        except ValueError as ex:
-            if self.page:
-                self.page.open(
-                    ft.SnackBar(
-                        content=ft.Text(f"Error saving settings: {str(ex)}"),
-                        bgcolor=self.theme.error,
-                    )
-                )
-
-    def _cancel(self, e):
-        self.open = False
-        if self.page:
-            self.page.update()
+    def get_config(self) -> AppConfig:
+        return self.config

@@ -20,11 +20,9 @@ def main():
     log_file = setup_error_logging()
 
     try:
-        import flet as ft
-        from subtitlelab.gui.app import SubtitleLabApp
+        from subtitlelab.gui.app import run_app
 
-        app = SubtitleLabApp()
-        ft.app(target=app.main)
+        run_app()
 
     except Exception as e:
         error_msg = f"SubtitleLab Error:\n{traceback.format_exc()}"

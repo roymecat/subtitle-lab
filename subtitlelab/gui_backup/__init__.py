@@ -2,23 +2,26 @@
 
 from .theme import Theme, ThemeMode, get_theme
 from .components import (
+    GlassCard,
+    AnimatedProgressRing,
     SubtitleListItem,
     ProcessedResultCard,
+    LogEntry,
     StatsCard,
-    LogPanel,
 )
 from .settings_dialog import SettingsDialog
-from .app import MainWindow, run_app
+from .app import SubtitleLabApp
 
 __all__ = [
     "Theme",
     "ThemeMode",
     "get_theme",
+    "GlassCard",
+    "AnimatedProgressRing",
     "SubtitleListItem",
     "ProcessedResultCard",
+    "LogEntry",
     "StatsCard",
-    "LogPanel",
     "SettingsDialog",
-    "MainWindow",
-    "run_app",
+    "SubtitleLabApp",
 ]

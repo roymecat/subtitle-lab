@@ -1,0 +1,15 @@
+# SubtitleLab Dependencies
+# PyQt6 GUI Framework
+PyQt6>=6.5.0
+
+# HTTP Client
+httpx>=0.24.0
+
+# Subtitle Parsing
+pysubs2>=1.6.0
+
+# Token Counting (optional, for cost estimation)
+tiktoken>=0.5.0
+
+# Build Tools (optional, for creating executables)
+pyinstaller>=6.0.0
