@@ -1,4 +1,4 @@
-name: Build TUI Executable
+name: Build CLI Executable
 
 on:
   push:
@@ -29,15 +29,10 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build TUI with PyInstaller
+      - name: Build CLI with PyInstaller
         run: |
           pyinstaller --name SubtitleLab --onefile --console --clean --noconfirm `
-            --hidden-import=textual `
-            --hidden-import=textual.widgets `
-            --hidden-import=textual.containers `
-            --hidden-import=textual.screen `
-            --hidden-import=textual.driver `
-            --hidden-import=textual.drivers.windows_driver `
+            --hidden-import=rich `
             --hidden-import=asyncio `
             --hidden-import=pysubs2 `
             --hidden-import=pydantic `
@@ -46,12 +41,11 @@ jobs:
             --hidden-import=tenacity `
             --hidden-import=aiofiles `
             --hidden-import=httpx `
-            --collect-all=textual `
+            --collect-all=rich `
             --collect-all=openai `
             --collect-all=httpx `
             --collect-all=pysubs2 `
-            --add-data "subtitlelab/tui/styles.tcss;subtitlelab/tui" `
-            subtitlelab/main.py
+            subtitlelab/cli.py
 
       - name: Verify executable exists
         run: |
@@ -66,7 +60,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SubtitleLab-TUI-Windows
+          name: SubtitleLab-CLI-Windows
           path: dist/SubtitleLab.exe
           retention-days: 30
 
@@ -82,7 +76,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: SubtitleLab-TUI-Windows
+          name: SubtitleLab-CLI-Windows
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

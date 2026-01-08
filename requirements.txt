@@ -1,7 +1,7 @@
 # SubtitleLab Dependencies
 
-# TUI Framework
-textual>=0.50.0
+# CLI Beautification (replacing Textual)
+rich>=13.0.0
 
 # HTTP Client
 httpx>=0.24.0

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SubtitleLab Build Script (TUI Edition)
+SubtitleLab Build Script (CLI Edition)
 Creates Windows executable using PyInstaller.
 """
 
@@ -32,14 +32,12 @@ def build_executable():
     """Build the Windows executable using PyInstaller."""
 
     app_name = "SubtitleLab"
-    main_script = "subtitlelab/main.py"
+    main_script = "subtitlelab/cli.py"  # Entry point changed to cli.py
 
     if not os.path.exists(main_script):
         print(f"Error: {main_script} not found!")
         sys.exit(1)
 
-    # Build command for TUI
-    # Note: Removed --windowed because TUI needs a console
     cmd = [
         sys.executable,
         "-m",
@@ -48,24 +46,10 @@ def build_executable():
         app_name,
         "--onefile",  # Single executable
         "--noconfirm",  # Overwrite without asking
-        "--console",  # TUI needs console!
-        # Add data files (TCSS style sheet is crucial)
-        "--add-data",
-        "subtitlelab/tui/styles.tcss:subtitlelab/tui",
-        # Hidden imports for Textual
+        "--console",  # CLI application
+        # Hidden imports
         "--hidden-import",
-        "textual",
-        "--hidden-import",
-        "textual.widgets",
-        "--hidden-import",
-        "textual.containers",
-        "--hidden-import",
-        "textual.screen",
-        "--hidden-import",
-        "textual.driver",
-        "--hidden-import",
-        "textual.drivers.windows_driver",
-        # Hidden imports for other dependencies
+        "rich",
         "--hidden-import",
         "httpx",
         "--hidden-import",
@@ -82,7 +66,7 @@ def build_executable():
         "aiofiles",
         # Collect metadata
         "--collect-all",
-        "textual",
+        "rich",
         "--collect-all",
         "openai",
         "--collect-all",
@@ -104,11 +88,13 @@ def build_executable():
         "PyQt6",
         "--exclude-module",
         "PySide6",
+        "--exclude-module",
+        "textual",
         # Main script
         main_script,
     ]
 
-    print("Building SubtitleLab TUI executable...")
+    print("Building SubtitleLab CLI executable...")
     print(f"Command: {' '.join(cmd)}")
     print()
 

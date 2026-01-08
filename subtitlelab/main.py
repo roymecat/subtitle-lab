@@ -1,11 +1,6 @@
 """SubtitleLab Main Entry Point."""
 
-from subtitlelab.tui import run_app
-
-
-def main():
-    run_app()
-
+from subtitlelab.cli import main
 
 if __name__ == "__main__":
     main()
