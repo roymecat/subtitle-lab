@@ -1,4 +1,4 @@
-name: Build Windows Executable
+name: Build TUI Executable
 
 on:
   push:
@@ -29,68 +29,28 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller
+      - name: Build TUI with PyInstaller
         run: |
-          pyinstaller --name SubtitleLab --onefile --windowed --clean --noconfirm `
-            --hidden-import=PyQt6 `
-            --hidden-import=PyQt6.QtCore `
-            --hidden-import=PyQt6.QtGui `
-            --hidden-import=PyQt6.QtWidgets `
-            --hidden-import=PyQt6.sip `
-            --hidden-import=openai `
-            --hidden-import=openai.resources `
-            --hidden-import=openai.types `
-            --hidden-import=openai._client `
-            --hidden-import=openai._base_client `
-            --hidden-import=openai._streaming `
-            --hidden-import=openai._exceptions `
-            --hidden-import=httpx `
-            --hidden-import=httpcore `
-            --hidden-import=h11 `
-            --hidden-import=anyio `
-            --hidden-import=anyio._backends `
-            --hidden-import=anyio._backends._asyncio `
-            --hidden-import=sniffio `
-            --hidden-import=certifi `
-            --hidden-import=idna `
-            --hidden-import=charset_normalizer `
+          pyinstaller --name SubtitleLab --onefile --console --clean --noconfirm `
+            --hidden-import=textual `
+            --hidden-import=textual.widgets `
+            --hidden-import=textual.containers `
+            --hidden-import=textual.screen `
+            --hidden-import=textual.driver `
+            --hidden-import=textual.drivers.windows_driver `
+            --hidden-import=asyncio `
             --hidden-import=pysubs2 `
             --hidden-import=pydantic `
-            --hidden-import=pydantic.deprecated `
-            --hidden-import=pydantic.deprecated.decorator `
-            --hidden-import=pydantic_core `
-            --hidden-import=pydantic_core._pydantic_core `
-            --hidden-import=annotated_types `
+            --hidden-import=tiktoken `
+            --hidden-import=openai `
             --hidden-import=tenacity `
             --hidden-import=aiofiles `
-            --hidden-import=aiofiles.os `
-            --hidden-import=aiofiles.ospath `
-            --hidden-import=tiktoken `
-            --hidden-import=tiktoken_ext `
-            --hidden-import=tiktoken_ext.openai_public `
-            --hidden-import=regex `
-            --hidden-import=asyncio `
-            --hidden-import=json `
-            --hidden-import=logging `
-            --hidden-import=dataclasses `
-            --hidden-import=typing_extensions `
-            --hidden-import=distro `
-            --hidden-import=jiter `
-            --collect-all=PyQt6 `
+            --hidden-import=httpx `
+            --collect-all=textual `
             --collect-all=openai `
             --collect-all=httpx `
-            --collect-all=httpcore `
-            --collect-all=pydantic `
-            --collect-all=pydantic_core `
-            --collect-all=tiktoken `
-            --collect-all=tiktoken_ext `
-            --collect-all=certifi `
             --collect-all=pysubs2 `
-            --collect-all=tenacity `
-            --collect-all=aiofiles `
-            --collect-data=tiktoken `
-            --collect-data=certifi `
-            --add-data "subtitlelab/gui/translations;subtitlelab/gui/translations" `
+            --add-data "subtitlelab/tui/styles.tcss;subtitlelab/tui" `
             subtitlelab/main.py
 
       - name: Verify executable exists
@@ -106,7 +66,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SubtitleLab-Windows
+          name: SubtitleLab-TUI-Windows
           path: dist/SubtitleLab.exe
           retention-days: 30
 
@@ -122,7 +82,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: SubtitleLab-Windows
+          name: SubtitleLab-TUI-Windows
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

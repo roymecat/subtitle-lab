@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SubtitleLab Build Script
+SubtitleLab Build Script (TUI Edition)
 Creates Windows executable using PyInstaller.
-
-Usage:
-    python build.py          # Build executable
-    python build.py --clean  # Clean build artifacts first
 """
 
 import os
@@ -35,37 +31,40 @@ def clean_build():
 def build_executable():
     """Build the Windows executable using PyInstaller."""
 
-    # PyInstaller options
     app_name = "SubtitleLab"
     main_script = "subtitlelab/main.py"
 
-    # Check if main script exists
     if not os.path.exists(main_script):
         print(f"Error: {main_script} not found!")
         sys.exit(1)
 
-    # Build command
+    # Build command for TUI
+    # Note: Removed --windowed because TUI needs a console
     cmd = [
         sys.executable,
         "-m",
         "PyInstaller",
         "--name",
         app_name,
-        "--windowed",  # No console window
         "--onefile",  # Single executable
         "--noconfirm",  # Overwrite without asking
-        # Add data files
+        "--console",  # TUI needs console!
+        # Add data files (TCSS style sheet is crucial)
         "--add-data",
-        "subtitlelab/gui/translations:subtitlelab/gui/translations",
-        # Hidden imports for PyQt6
+        "subtitlelab/tui/styles.tcss:subtitlelab/tui",
+        # Hidden imports for Textual
         "--hidden-import",
-        "PyQt6.QtCore",
+        "textual",
         "--hidden-import",
-        "PyQt6.QtGui",
+        "textual.widgets",
         "--hidden-import",
-        "PyQt6.QtWidgets",
+        "textual.containers",
         "--hidden-import",
-        "PyQt6.sip",
+        "textual.screen",
+        "--hidden-import",
+        "textual.driver",
+        "--hidden-import",
+        "textual.drivers.windows_driver",
         # Hidden imports for other dependencies
         "--hidden-import",
         "httpx",
@@ -74,10 +73,23 @@ def build_executable():
         "--hidden-import",
         "tiktoken",
         "--hidden-import",
-        "tiktoken_ext",
+        "openai",
         "--hidden-import",
-        "tiktoken_ext.openai_public",
-        # Exclude unnecessary modules to reduce size
+        "pydantic",
+        "--hidden-import",
+        "tenacity",
+        "--hidden-import",
+        "aiofiles",
+        # Collect metadata
+        "--collect-all",
+        "textual",
+        "--collect-all",
+        "openai",
+        "--collect-all",
+        "httpx",
+        "--collect-all",
+        "pysubs2",
+        # Exclude unnecessary modules
         "--exclude-module",
         "matplotlib",
         "--exclude-module",
@@ -88,11 +100,15 @@ def build_executable():
         "PIL",
         "--exclude-module",
         "tkinter",
+        "--exclude-module",
+        "PyQt6",
+        "--exclude-module",
+        "PySide6",
         # Main script
         main_script,
     ]
 
-    print("Building SubtitleLab executable...")
+    print("Building SubtitleLab TUI executable...")
     print(f"Command: {' '.join(cmd)}")
     print()
 
@@ -106,17 +122,11 @@ def build_executable():
     except subprocess.CalledProcessError as e:
         print(f"Build failed with error code {e.returncode}")
         sys.exit(1)
-    except FileNotFoundError:
-        print("Error: PyInstaller not found. Install it with:")
-        print("  pip install pyinstaller")
-        sys.exit(1)
 
 
 def main():
-    # Change to script directory
     os.chdir(Path(__file__).parent)
 
-    # Parse arguments
     if "--clean" in sys.argv:
         clean_build()
 
@@ -124,7 +134,6 @@ def main():
         clean_build()
         return
 
-    # Check dependencies
     try:
         import PyInstaller
     except ImportError:

@@ -1,0 +1,215 @@
+/* Global Theme Variables */
+$primary: #818CF8;
+$primary-dark: #4F46E5;
+$secondary: #A78BFA;
+$accent: #22D3EE;
+$success: #34D399;
+$warning: #FBBF24;
+$error: #F87171;
+$background: #0F172A;
+$surface: #1E293B;
+$surface-light: #334155;
+$text: #FFFFFF;
+$text-muted: #94A3B8;
+$border: #475569;
+
+Screen {
+    background: $background;
+    color: $text;
+}
+
+/* --- Layout Components --- */
+
+#sidebar {
+    dock: left;
+    width: 25;
+    height: 100%;
+    background: $surface;
+    border-right: solid $border;
+    padding: 1;
+}
+
+#main-content {
+    height: 100%;
+    width: 100%;
+    padding: 1;
+}
+
+#header {
+    height: 3;
+    dock: top;
+    content-align: center middle;
+    background: $surface;
+    border-bottom: solid $border;
+    color: $accent;
+    text-style: bold;
+}
+
+#footer {
+    height: 1;
+    dock: bottom;
+    background: $surface;
+    color: $text-muted;
+}
+
+/* --- Widgets --- */
+
+Button {
+    width: 100%;
+    margin-bottom: 1;
+    background: $surface-light;
+    border: none;
+    color: $text;
+}
+
+Button:hover {
+    background: $primary;
+    color: $background;
+}
+
+Button.primary {
+    background: $primary;
+    color: $background;
+    text-style: bold;
+}
+
+Button.primary:hover {
+    background: $primary-dark;
+}
+
+Button.success {
+    background: $success;
+    color: $background;
+}
+
+Button.error {
+    background: $error;
+    color: $background;
+}
+
+Label {
+    padding: 1;
+}
+
+Label.title {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+Input {
+    border: solid $border;
+    background: $surface;
+    color: $text;
+    padding: 0 1;
+    height: 3;
+    margin-bottom: 1;
+}
+
+Input:focus {
+    border: solid $primary;
+}
+
+DataTable {
+    background: $surface;
+    border: solid $border;
+    height: 100%;
+}
+
+DataTable > .datatable--header {
+    background: $surface-light;
+    color: $accent;
+    text-style: bold;
+}
+
+Log {
+    background: $surface;
+    border: solid $border;
+    height: 1fr;
+    color: $text-muted;
+    scrollbar-color: $primary;
+}
+
+ProgressBar {
+    width: 100%;
+    height: 1;
+    margin: 1 0;
+    color: $success;
+    background: $surface-light;
+}
+
+/* --- Stats Cards --- */
+
+.stats-container {
+    layout: grid;
+    grid-size: 4;
+    grid-gutter: 1;
+    height: 5;
+    margin-top: 1;
+    dock: bottom;
+}
+
+.stat-card {
+    background: $surface;
+    border: solid $border;
+    height: 100%;
+    content-align: center middle;
+}
+
+.stat-value {
+    text-style: bold;
+    color: $primary;
+    text-align: center;
+}
+
+.stat-label {
+    color: $text-muted;
+    text-align: center;
+}
+
+/* --- Settings Dialog --- */
+
+SettingsScreen {
+    align: center middle;
+    background: rgba(0,0,0,0.7);
+}
+
+#settings-container {
+    width: 80%;
+    height: 80%;
+    background: $surface;
+    border: solid $primary;
+    padding: 2;
+}
+
+.dialog-buttons {
+    dock: bottom;
+    height: 3;
+    align: right middle;
+}
+
+.dialog-buttons Button {
+    width: 15;
+    margin-left: 1;
+}
+
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    padding: 1;
+}
+
+TextArea {
+    border: solid $border;
+    background: $surface;
+    color: $text;
+    height: 10;
+    margin-bottom: 1;
+}
+
+Switch {
+    background: $surface-light;
+    color: $success;
+}
