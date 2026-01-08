@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical, ContentSwitcher
+from textual.containers import Horizontal, Vertical
 from textual.widgets import (
     Header,
     Footer,
@@ -12,6 +12,7 @@ from textual.widgets import (
     ListView,
     ListItem,
     DirectoryTree,
+    ContentSwitcher,
 )
 from textual.screen import Screen
 from textual.binding import Binding
