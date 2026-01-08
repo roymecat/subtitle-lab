@@ -149,12 +149,19 @@ class SettingsDialog(QDialog):
         chunk_group = QGroupBox(self._tr("Chunking Strategy"))
         chunk_layout = QFormLayout(chunk_group)
 
+        self.auto_chunk_check = QCheckBox(self._tr("Auto Chunking (Recommended)"))
+        self.auto_chunk_check.setChecked(True)
+        self.auto_chunk_check.toggled.connect(self._on_auto_chunk_toggle)
+        chunk_layout.addRow("", self.auto_chunk_check)
+
         self.window_size_spin = QSpinBox()
         self.window_size_spin.setRange(5, 100)
+        self.window_size_spin.setEnabled(False)
         chunk_layout.addRow(self._tr("Window Size:"), self.window_size_spin)
 
         self.overlap_spin = QSpinBox()
         self.overlap_spin.setRange(0, 10)
+        self.overlap_spin.setEnabled(False)
         chunk_layout.addRow(self._tr("Window Overlap:"), self.overlap_spin)
 
         layout.addWidget(chunk_group)
@@ -191,6 +198,10 @@ class SettingsDialog(QDialog):
         scroll.setWidget(widget)
         return scroll
 
+    def _on_auto_chunk_toggle(self, checked: bool):
+        self.window_size_spin.setEnabled(not checked)
+        self.overlap_spin.setEnabled(not checked)
+
     def _create_prompt_tab(self) -> QWidget:
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -200,26 +211,41 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(widget)
         layout.setSpacing(16)
 
-        bg_group = QGroupBox(self._tr("Background Information"))
+        bg_group = QGroupBox(self._tr("Video Context"))
         bg_layout = QVBoxLayout(bg_group)
         self.background_edit = QTextEdit()
-        self.background_edit.setPlaceholderText(self._tr("Context about the video content..."))
+        self.background_edit.setPlaceholderText(
+            self._tr(
+                "Describe the video content to help AI understand context...\n"
+                "Example: Gaming stream by streamer XXX, playing Genshin Impact"
+            )
+        )
         self.background_edit.setMaximumHeight(100)
         bg_layout.addWidget(self.background_edit)
         layout.addWidget(bg_group)
 
-        style_group = QGroupBox(self._tr("Style Guide"))
-        style_layout = QVBoxLayout(style_group)
+        terms_group = QGroupBox(self._tr("Terminology List"))
+        terms_layout = QVBoxLayout(terms_group)
         self.style_edit = QTextEdit()
-        self.style_edit.setPlaceholderText(self._tr("Translation tone, specific terminology..."))
+        self.style_edit.setPlaceholderText(
+            self._tr(
+                "List proper nouns, names, and terms for consistent correction...\n"
+                "Example: Game=Genshin Impact, Character=Traveler, Streamer=XXX"
+            )
+        )
         self.style_edit.setMaximumHeight(100)
-        style_layout.addWidget(self.style_edit)
-        layout.addWidget(style_group)
+        terms_layout.addWidget(self.style_edit)
+        layout.addWidget(terms_group)
 
-        instr_group = QGroupBox(self._tr("Custom Instructions"))
+        instr_group = QGroupBox(self._tr("Custom Rules"))
         instr_layout = QVBoxLayout(instr_group)
         self.instructions_edit = QTextEdit()
-        self.instructions_edit.setPlaceholderText(self._tr("Any additional prompt instructions..."))
+        self.instructions_edit.setPlaceholderText(
+            self._tr(
+                "Additional correction rules...\n"
+                "Example: Keep all filler words like 'um', 'uh'. Do not delete short pauses."
+            )
+        )
         self.instructions_edit.setMaximumHeight(100)
         instr_layout.addWidget(self.instructions_edit)
         layout.addWidget(instr_group)
@@ -301,6 +327,11 @@ class SettingsDialog(QDialog):
         self.dynamic_window_check.setChecked(proc.allow_dynamic_window)
         self.quality_scoring_check.setChecked(proc.enable_quality_scoring)
         self.score_threshold_spin.setValue(proc.quality_score_threshold)
+
+        auto_chunk = proc.allow_dynamic_window
+        self.auto_chunk_check.setChecked(auto_chunk)
+        self.window_size_spin.setEnabled(not auto_chunk)
+        self.overlap_spin.setEnabled(not auto_chunk)
 
         prompt = self.config.user_prompt
         self.background_edit.setPlainText(prompt.background_info)

@@ -8,7 +8,6 @@ from typing import Dict
 
 # Chinese translations dictionary
 ZH_CN: Dict[str, str] = {
-    # Main Window
     "SubtitleLab initialized. Ready to import.": "SubtitleLab 已初始化，准备导入文件。",
     "Toggle Theme": "切换主题",
     "Settings": "设置",
@@ -38,10 +37,9 @@ ZH_CN: Dict[str, str] = {
     "Theme switched to dark": "已切换到深色主题",
     "Theme switched to light": "已切换到浅色主题",
     "Settings saved": "设置已保存",
-    # Settings Dialog
     "LLM": "语言模型",
     "Processing": "处理设置",
-    "Prompts": "提示词",
+    "Prompts": "修复设置",
     "Pricing": "价格",
     "Preset": "预设",
     "Provider:": "提供商：",
@@ -56,6 +54,7 @@ ZH_CN: Dict[str, str] = {
     "Concurrency:": "并发数：",
     "Enable JSON Mode": "启用 JSON 模式",
     "Chunking Strategy": "分块策略",
+    "Auto Chunking (Recommended)": "自动分块（推荐）",
     "Window Size:": "窗口大小：",
     "Window Overlap:": "窗口重叠：",
     "Optimization": "优化选项",
@@ -65,22 +64,20 @@ ZH_CN: Dict[str, str] = {
     "Quality Scoring": "质量评分",
     "Enable Quality Scoring (LLM)": "启用质量评分 (LLM)",
     "Score Threshold:": "评分阈值：",
-    "Background Information": "背景信息",
-    "Context about the video content...": "关于视频内容的背景信息...",
-    "Style Guide": "风格指南",
-    "Translation tone, specific terminology...": "翻译语气、特定术语...",
-    "Custom Instructions": "自定义指令",
-    "Any additional prompt instructions...": "任何额外的提示指令...",
+    "Video Context": "视频背景",
+    "Describe the video content to help AI understand context...\nExample: Gaming stream by streamer XXX, playing Genshin Impact": "描述视频内容以帮助 AI 理解上下文...\n例如：主播 XXX 的游戏直播，正在玩原神",
+    "Terminology List": "专有名词表",
+    "List proper nouns, names, and terms for consistent correction...\nExample: Game=Genshin Impact, Character=Traveler, Streamer=XXX": "列出专有名词、人名和术语以保持修正一致性...\n例如：游戏=原神，角色=旅行者，主播=XXX",
+    "Custom Rules": "自定义规则",
+    "Additional correction rules...\nExample: Keep all filler words like 'um', 'uh'. Do not delete short pauses.": "额外的修正规则...\n例如：保留所有语气词如"嗯"、"啊"。不要删除短暂停顿。",
     "Token Pricing": "令牌价格",
     "Enable Cost Estimation": "启用成本估算",
     "Input Price:": "输入价格：",
     "Output Price:": "输出价格：",
     "Used for calculating estimated costs based on token usage.": "用于根据令牌使用量计算预估成本。",
     "Save": "保存",
-    # Components
     "ORIGINAL": "原文",
     "PROCESSED": "处理后",
-    # Actions
     "merge": "合并",
     "delete": "删除",
     "correct": "修正",

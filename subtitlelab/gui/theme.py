@@ -386,18 +386,18 @@ class Theme:
 
 DARK_THEME = Theme(
     mode=ThemeMode.DARK,
-    primary="#6366F1",
-    secondary="#8B5CF6",
-    accent="#06B6D4",
-    success="#10B981",
-    warning="#F59E0B",
-    error="#EF4444",
+    primary="#818CF8",
+    secondary="#A78BFA",
+    accent="#22D3EE",
+    success="#34D399",
+    warning="#FBBF24",
+    error="#F87171",
     background="#0F172A",
     surface="#1E293B",
     surface_light="#334155",
-    text_primary="#F8FAFC",
-    text_secondary="#94A3B8",
-    border="#475569",
+    text_primary="#FFFFFF",
+    text_secondary="#CBD5E1",
+    border="#64748B",
     radius=BorderRadius(),
 )
 
