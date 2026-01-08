@@ -29,7 +29,14 @@ jobs:
           pip install -e .
           pip install pyinstaller
 
-      - name: Build executable
+      - name: Build with Flet pack
+        run: |
+          pip install flet
+          flet pack subtitlelab/main.py --name SubtitleLab --icon assets/icon.ico 2>$null || flet pack subtitlelab/main.py --name SubtitleLab
+        continue-on-error: true
+
+      - name: Fallback to PyInstaller if Flet pack fails
+        if: failure() || !hashFiles('dist/SubtitleLab.exe')
         run: |
           pyinstaller --name SubtitleLab --onefile --windowed --clean --noconfirm `
             --hidden-import=asyncio `
@@ -49,9 +56,22 @@ jobs:
             --hidden-import=sniffio `
             --hidden-import=h11 `
             --hidden-import=flet `
-            --collect-data=flet `
+            --hidden-import=flet.core `
+            --hidden-import=flet.utils `
+            --collect-all=flet `
             --collect-data=tiktoken `
+            --collect-data=certifi `
             subtitlelab/main.py
+
+      - name: Verify executable exists
+        run: |
+          if (Test-Path "dist/SubtitleLab.exe") {
+            Write-Host "Build successful: dist/SubtitleLab.exe"
+            Get-Item "dist/SubtitleLab.exe" | Select-Object Name, Length
+          } else {
+            Write-Host "Build failed: executable not found"
+            exit 1
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
