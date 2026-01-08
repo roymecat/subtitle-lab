@@ -26,24 +26,19 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with Flet pack
-        run: |
-          pip install flet
-          flet pack subtitlelab/main.py --name SubtitleLab --icon assets/icon.ico 2>$null || flet pack subtitlelab/main.py --name SubtitleLab
-        continue-on-error: true
-
-      - name: Fallback to PyInstaller if Flet pack fails
-        if: failure() || !hashFiles('dist/SubtitleLab.exe')
+      - name: Build with PyInstaller
         run: |
           pyinstaller --name SubtitleLab --onefile --windowed --clean --noconfirm `
+            --hidden-import=PyQt6 `
+            --hidden-import=PyQt6.QtCore `
+            --hidden-import=PyQt6.QtGui `
+            --hidden-import=PyQt6.QtWidgets `
+            --hidden-import=PyQt6.sip `
             --hidden-import=asyncio `
-            --hidden-import=aiofiles `
-            --hidden-import=openai `
             --hidden-import=pysubs2 `
-            --hidden-import=tenacity `
             --hidden-import=pydantic `
             --hidden-import=tiktoken `
             --hidden-import=tiktoken_ext `
@@ -55,12 +50,10 @@ jobs:
             --hidden-import=anyio `
             --hidden-import=sniffio `
             --hidden-import=h11 `
-            --hidden-import=flet `
-            --hidden-import=flet.core `
-            --hidden-import=flet.utils `
-            --collect-all=flet `
+            --collect-all=PyQt6 `
             --collect-data=tiktoken `
             --collect-data=certifi `
+            --add-data "subtitlelab/gui/translations;subtitlelab/gui/translations" `
             subtitlelab/main.py
 
       - name: Verify executable exists
