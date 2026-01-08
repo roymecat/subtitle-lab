@@ -56,13 +56,15 @@ def run_init_wizard(config: AppConfig) -> None:
         base_url = Prompt.ask("API Base URL", default="https://api.openai.com/v1")
         model = Prompt.ask("Model", default="gpt-4o")
     elif provider == "deepseek":
-        base_url = Prompt.ask("API Base URL", default="https://api.deepseek.com")
+        base_url = Prompt.ask(
+            "API Base URL (请确保包含 /v1)", default="https://api.deepseek.com/v1"
+        )
         model = Prompt.ask("Model", default="deepseek-chat")
     elif provider == "ollama":
         base_url = Prompt.ask("API Base URL", default="http://localhost:11434/v1")
         model = Prompt.ask("Model", default="llama3")
     else:
-        base_url = Prompt.ask("API Base URL")
+        base_url = Prompt.ask("API Base URL (如 https://api.openai.com/v1)")
         model = Prompt.ask("Model")
 
     api_key = Prompt.ask("API Key", password=True)
@@ -72,11 +74,29 @@ def run_init_wizard(config: AppConfig) -> None:
     config.llm.model = model
 
     console.print("\n[bold]Processing Settings[/bold]")
-    config.processing.concurrency = IntPrompt.ask("Concurrency (simultaneous batches)", default=3)
-    config.processing.window_size = IntPrompt.ask("Window Size (lines per batch)", default=20)
+    config.processing.concurrency = IntPrompt.ask("Concurrency (并发数)", default=3)
+    config.processing.window_size = IntPrompt.ask("Window Size (每批行数)", default=20)
     config.processing.allow_dynamic_window = Confirm.ask(
-        "Enable Auto-Chunking (Recommended)", default=True
+        "Enable Auto-Chunking (自动分块 - 推荐)", default=True
     )
+
+    # Advanced Settings
+    if Confirm.ask("Configure Advanced Settings? (高级设置)", default=False):
+        config.processing.enable_semantic_analysis = Confirm.ask(
+            "Enable Semantic Analysis (全文本语义分析 - 推荐)", default=True
+        )
+        config.processing.enable_pre_filter = Confirm.ask(
+            "Enable Pre-filter (预过滤无效字幕)", default=True
+        )
+
+        # Quality Scoring
+        if Confirm.ask("Enable Quality Scoring (启用自动评分 - 会增加API消耗)", default=False):
+            config.processing.enable_quality_scoring = True
+            config.processing.quality_score_threshold = float(
+                Prompt.ask("Score Threshold (评分阈值 0.0-1.0)", default="0.75")
+            )
+        else:
+            config.processing.enable_quality_scoring = False
 
     config.save()
     console.print(f"\n[green]Configuration saved to {CONFIG_FILE}[/green]")
@@ -116,6 +136,18 @@ async def process_file(file_path: Path, config: AppConfig, output_path: Optional
     processor.callbacks = ProcessorCallbacks(
         on_progress=on_progress, on_batch_complete=on_batch_complete, on_error=on_error
     )
+
+    # 询问本次任务的特定背景信息
+    console.print("\n[bold]任务背景信息 (可选)[/bold]")
+    console.print("[dim]提供视频背景、人名或特定术语有助于提高修复准确率。[/dim]")
+
+    if config.user_prompt.background_info:
+        console.print(f"当前全局背景: [dim]{config.user_prompt.background_info[:50]}...[/dim]")
+
+    if Confirm.ask("是否为本次任务添加额外背景信息？", default=False):
+        task_context = Prompt.ask("请输入背景信息 (例如: '这是关于原神的游戏直播，主播叫老王')")
+        # 临时修改配置用于本次处理
+        config.user_prompt.background_info += f"\n[本次任务补充] {task_context}"
 
     console.print(f"[bold cyan]Starting processing for: {file_path.name}[/bold cyan]")
 
